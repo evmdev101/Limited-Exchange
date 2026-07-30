@@ -13,6 +13,7 @@ import {
   type Address,
   type EIP1193Provider,
 } from "viem";
+import ThemePicker from "./ThemePicker";
 
 const pulsechain = defineChain({
   id: 369,
@@ -289,6 +290,7 @@ export default function Home() {
         <nav className="topnav" aria-label="Primary navigation">
           <a href="#how">How it works</a>
           <a href="#pools">Pools</a>
+          <ThemePicker />
           <button className="wallet-button" type="button" onClick={connectWallet}>
             {account ? shortAddress(account) : "Connect wallet"}
           </button>

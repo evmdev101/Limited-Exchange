@@ -29,14 +29,16 @@ test("server-renders the Limited Exchange redemption interface", async () => {
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
   assert.match(html, /1:1 token redemption on PulseChain/);
+  assert.match(html, /> Theme</);
   assert.match(html, /role="status"/);
   assert.match(html, /property="og:image"/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview/);
 });
 
 test("ships the source-matched theme and atomic redemption contract", async () => {
-  const [page, layout, styles, packageJson, vault] = await Promise.all([
+  const [page, themePicker, layout, styles, packageJson, vault] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/ThemePicker.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -47,6 +49,10 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(page, /function fundPool\(\)/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
+  assert.match(page, /<ThemePicker \/>/);
+  assert.match(themePicker, /#282c34.*#9cdef2.*#111111.*#355a66.*#e06c75/);
+  assert.match(themePicker, /Apply Custom Theme/);
+  assert.match(themePicker, /limited-exchange-theme-v1/);
   assert.match(layout, /Limited Exchange/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);
