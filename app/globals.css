@@ -45,22 +45,13 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   justify-content: space-between;
   border-bottom: 1px solid rgba(255, 102, 127, .35);
 }
-.brand { color: var(--text); display: flex; align-items: center; gap: 14px; text-decoration: none; }
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid rgba(255, 102, 127, .55);
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #263c4a, #10151b 62%);
+.brand { color: var(--text); display: flex; align-items: center; text-decoration: none; }
+.brand-title {
   color: var(--pink);
-  font-size: 22px;
-  font-weight: 900;
-  box-shadow: inset 0 0 18px rgba(159, 234, 255, .08);
+  font-size: 17px;
+  font-weight: 850;
+  letter-spacing: .2em;
 }
-.brand b { display: block; color: var(--pink); letter-spacing: .24em; font-size: 19px; }
-.brand small { display: block; margin-top: 3px; color: var(--cyan-dim); letter-spacing: .16em; font-size: 9px; }
 .topnav { display: flex; align-items: center; gap: 30px; }
 .topnav a { color: #93aebb; text-decoration: none; font-size: 14px; }
 .topnav a:hover { color: var(--cyan); }
@@ -177,7 +168,8 @@ footer a { color: var(--cyan-dim); text-decoration: none; }
 
 @media (max-width: 760px) {
   .topbar { height: 78px; padding: 0 18px; }
-  .brand small, .topnav a { display: none; }
+  .topnav a { display: none; }
+  .brand-title { font-size: 13px; letter-spacing: .14em; }
   .topnav { gap: 10px; }
   .wallet-button { padding: 10px 12px; font-size: 12px; }
   .hero { padding: 55px 20px 42px; }

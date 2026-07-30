@@ -11,21 +11,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host") ?? "localhost:3000";
   const protocol = requestHeaders.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   const origin = `${protocol}://${host}`;
-  const description = "Burn supported Nexion ecosystem tokens and receive their limited counterparts at a transparent 1:1 rate on PulseChain.";
+  const description = "Burn supported tokens and receive their limited counterparts at a transparent 1:1 rate on PulseChain.";
 
   return {
-    title: "Nexion Limited Exchange",
+    title: "Limited Exchange",
     description,
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: {
-      title: "Nexion Limited Exchange",
+      title: "Limited Exchange",
       description,
       type: "website",
-      images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "Nexion Limited Exchange — 1:1 on PulseChain" }],
+      images: [{ url: `${origin}/og.png`, width: 1536, height: 1024, alt: "Limited Exchange — 1:1 on PulseChain" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: "Nexion Limited Exchange",
+      title: "Limited Exchange",
       description,
       images: [`${origin}/og.png`],
     },

@@ -14,13 +14,13 @@ async function render() {
   );
 }
 
-test("server-renders the Nexion redemption interface", async () => {
+test("server-renders the Limited Exchange redemption interface", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Nexion Limited Exchange<\/title>/i);
+  assert.match(html, /<title>Limited Exchange<\/title>/i);
   assert.match(html, /Burn the original/);
   assert.match(html, /Claim the limited/);
   assert.match(html, /CashX/);
@@ -46,7 +46,9 @@ test("ships the production UI and atomic redemption contract", async () => {
   assert.match(page, /function fundPool\(\)/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
-  assert.match(layout, /Nexion Limited Exchange/);
+  assert.match(layout, /Limited Exchange/);
+  assert.doesNotMatch(page, /Nexion/i);
+  assert.doesNotMatch(layout, /Nexion/i);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(vault, /burnToken\.burnFrom\(msg\.sender, amount\)/);
   assert.match(vault, /limitedToken\.safeTransfer\(msg\.sender, amount\)/);

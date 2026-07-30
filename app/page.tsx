@@ -283,9 +283,8 @@ export default function Home() {
   return (
     <main className="site-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Nexion Limited home">
-          <span className="brand-mark">N</span>
-          <span><b>NEXION</b><small>LIMITED EXCHANGE</small></span>
+        <a className="brand" href="#top" aria-label="Limited Exchange home">
+          <span className="brand-title">LIMITED EXCHANGE</span>
         </a>
         <nav className="topnav" aria-label="Primary navigation">
           <a href="#how">How it works</a>
@@ -299,7 +298,7 @@ export default function Home() {
       <section className="hero" id="top">
         <div className="eyebrow"><span /> 1:1 token redemption on PulseChain</div>
         <h1>Burn the original.<br /><em>Claim the limited.</em></h1>
-        <p>Exchange supported Nexion ecosystem tokens for their limited counterparts. Every redemption is transparent, atomic, and fixed at a 1:1 rate.</p>
+        <p>Exchange supported tokens for their limited counterparts. Every redemption is transparent, atomic, and fixed at a 1:1 rate.</p>
         <div className="trust-row">
           <span>◈ Verifiable on-chain</span>
           <span>◎ Separate reserves</span>
@@ -418,8 +417,8 @@ export default function Home() {
       </section>
 
       <footer>
-        <span>NEXION // LIMITED EXCHANGE</span>
-        <p>Built for the Nexion community on PulseChain.</p>
+        <span>LIMITED EXCHANGE</span>
+        <p>Built for the community on PulseChain.</p>
         <a href="https://scan.pulsechain.com" target="_blank" rel="noreferrer">View explorer ↗</a>
       </footer>
     </main>
