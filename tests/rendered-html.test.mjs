@@ -34,10 +34,11 @@ test("server-renders the Limited Exchange redemption interface", async () => {
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview/);
 });
 
-test("ships the production UI and atomic redemption contract", async () => {
-  const [page, layout, packageJson, vault] = await Promise.all([
+test("ships the source-matched theme and atomic redemption contract", async () => {
+  const [page, layout, styles, packageJson, vault] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../contracts/src/TokenRedemptionVault.sol", import.meta.url), "utf8"),
   ]);
@@ -49,6 +50,11 @@ test("ships the production UI and atomic redemption contract", async () => {
   assert.match(layout, /Limited Exchange/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);
+  assert.match(styles, /--bg:\s*#282c34/);
+  assert.match(styles, /--fg:\s*#9cdef2/);
+  assert.match(styles, /--panel:\s*#111111/);
+  assert.match(styles, /--border:\s*#355a66/);
+  assert.match(styles, /--red:\s*#e06c75/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(vault, /burnToken\.burnFrom\(msg\.sender, amount\)/);
   assert.match(vault, /limitedToken\.safeTransfer\(msg\.sender, amount\)/);
