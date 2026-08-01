@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   applyBgEffectColor,
@@ -38,6 +38,7 @@ type SnapZone = "left" | "right" | "full" | null;
 
 const topSnapDistance = 14;
 const sideSnapDistance = 48;
+let proTipSeen = false;
 
 function snapZoneFor(x: number, y: number): SnapZone {
   if (y <= topSnapDistance) return "full";
@@ -135,6 +136,8 @@ export default function ThemePicker() {
   const [snap, setSnap] = useState<SnapZone>(null);
   const [snapHint, setSnapHint] = useState<SnapZone>(null);
   const [dragging, setDragging] = useState(false);
+  const [showTip, setShowTip] = useState(false);
+  const [tipPosition, setTipPosition] = useState<WindowPosition | null>(null);
   const windowRef = useRef<HTMLElement>(null);
   const dragRef = useRef({ active: false, startX: 0, startY: 0, baseLeft: 0, baseTop: 0 });
 
@@ -167,6 +170,30 @@ export default function ThemePicker() {
     document.addEventListener("keydown", closeOnEscape);
     return () => document.removeEventListener("keydown", closeOnEscape);
   }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || !showTip || minimized || snap || !windowRef.current) {
+      setTipPosition(null);
+      return;
+    }
+
+    const dialogRect = windowRef.current.getBoundingClientRect();
+    const tipWidth = 260;
+    const tipHeight = 240;
+    const gap = 16;
+    const margin = 12;
+    const rightPosition = dialogRect.right + gap;
+    const leftPosition = dialogRect.left - tipWidth - gap;
+    const left = rightPosition + tipWidth <= window.innerWidth - margin
+      ? rightPosition
+      : Math.max(margin, leftPosition);
+    const top = Math.min(
+      Math.max(margin, dialogRect.top),
+      Math.max(margin, window.innerHeight - tipHeight - margin),
+    );
+
+    setTipPosition({ left, top });
+  }, [minimized, open, position, showTip, snap]);
 
   function pickTheme(name: string) {
     const nextColors = themes[name];
@@ -203,6 +230,12 @@ export default function ThemePicker() {
     setSnap(null);
     setSnapHint(null);
     setOpen(true);
+    if (!proTipSeen) setShowTip(true);
+  }
+
+  function dismissTip() {
+    proTipSeen = true;
+    setShowTip(false);
   }
 
   function onHeaderPointerDown(event: ReactPointerEvent<HTMLElement>) {
@@ -378,6 +411,24 @@ export default function ThemePicker() {
             </>
           )}
         </section>
+      )}
+
+      {open && showTip && !minimized && !snap && tipPosition && (
+        <aside className="theme-pro-tip" aria-label="Theme window pro tip" style={{ left: tipPosition.left, top: tipPosition.top }}>
+          <div className="theme-tip-demo" aria-hidden="true">
+            <svg viewBox="0 0 100 60" width="160" height="96">
+              <rect x="0.5" y="0.5" width="99" height="59" rx="3" fill="none" stroke="currentColor" strokeOpacity="0.18" />
+              <rect className="th-zone" x="51" y="2" width="47" height="56" rx="2" fill="currentColor" opacity="0" />
+              <g className="th-modal-group">
+                <rect x="22" y="20" width="34" height="22" rx="2.5" fill="var(--bg)" stroke="currentColor" strokeWidth="1.2" />
+                <rect x="22" y="20" width="34" height="5" rx="2.5" fill="currentColor" opacity="0.35" />
+              </g>
+              <path className="th-cursor" d="M0 0 L0 9 L2.5 7 L4.5 10 L6 9 L4 6 L7 6 Z" fill="currentColor" />
+            </svg>
+          </div>
+          <p><strong>Pro tip:</strong> drag the window&apos;s title bar to a screen edge to snap it. Drag to the top for fullscreen.</p>
+          <button type="button" onClick={dismissTip}>Got it</button>
+        </aside>
       )}
     </>
   );

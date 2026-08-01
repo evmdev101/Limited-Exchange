@@ -57,6 +57,9 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(themePicker, /setPointerCapture/);
   assert.match(themePicker, /function onHeaderPointerMove/);
   assert.match(themePicker, /function snapZoneFor/);
+  assert.match(themePicker, /Theme window pro tip/);
+  assert.match(themePicker, /Drag to the top for fullscreen/);
+  assert.match(themePicker, /proTipSeen = true/);
   assert.match(themePicker, /light:\s*\{ pattern: "dots" \}/);
   assert.match(themePicker, /cyberpunk:\s*\{ pattern: "synapse" \}/);
   assert.match(themePicker, /retrowave:\s*\{ pattern: "embers" \}/);
@@ -68,6 +71,8 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(styles, /\.theme-window\s*\{[\s\S]*top:\s*50vh[\s\S]*left:\s*50vw/);
   assert.match(styles, /\.theme-window-title[\s\S]*cursor:\s*grab/);
   assert.match(styles, /\.theme-snap-hint/);
+  assert.match(styles, /\.theme-pro-tip/);
+  assert.match(styles, /@keyframes th-modal-slide/);
   assert.match(layout, /Limited Exchange/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);
