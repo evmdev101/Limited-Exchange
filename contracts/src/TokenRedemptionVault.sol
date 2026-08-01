@@ -12,7 +12,7 @@ import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol
 /// @notice Burns one supported token and releases its limited counterpart 1:1.
 /// @dev Deploy one vault per pair. Both tokens must use the same decimals. The
 /// original token must reduce totalSupply by the exact amount transferred to BURN_SINK.
-contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
+abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public constant BURN_SINK = 0x000000000000000000000000000000000000dEaD;

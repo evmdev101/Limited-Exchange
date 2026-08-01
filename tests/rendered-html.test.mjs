@@ -36,7 +36,7 @@ test("server-renders the Limited Exchange redemption interface", async () => {
 });
 
 test("ships the source-matched theme and atomic redemption contract", async () => {
-  const [page, themePicker, themeEffects, layout, styles, packageJson, vault] = await Promise.all([
+  const [page, themePicker, themeEffects, layout, styles, packageJson, vault, poolVaults, deploymentConfig, compiler] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ThemePicker.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/themeEffects.ts", import.meta.url), "utf8"),
@@ -44,6 +44,9 @@ test("ships the source-matched theme and atomic redemption contract", async () =
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../contracts/src/TokenRedemptionVault.sol", import.meta.url), "utf8"),
+    readFile(new URL("../contracts/src/PoolRedemptionVaults.sol", import.meta.url), "utf8"),
+    readFile(new URL("../contracts/deployment/pulsechain-pools.json", import.meta.url), "utf8"),
+    readFile(new URL("../scripts/compile-contracts.mjs", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /function redeem\(\)/);
@@ -93,6 +96,7 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(styles, /--red:\s*#e06c75/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(vault, /BURN_SINK/);
+  assert.match(vault, /abstract contract TokenRedemptionVault/);
   assert.match(vault, /safeTransferFrom\(msg\.sender, BURN_SINK, amount\)/);
   assert.match(vault, /supplyBefore - supplyAfter/);
   assert.match(vault, /ExactBurnRequired/);
@@ -103,4 +107,42 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(vault, /uint256 public redemptionCount/);
   assert.match(vault, /uint256 public uniqueRedeemers/);
   assert.match(vault, /function fund\(uint256 amount\) external onlyOwner/);
+  assert.match(poolVaults, /contract CashXRedemptionVault is TokenRedemptionVault/);
+  assert.match(poolVaults, /contract DistroXRedemptionVault is TokenRedemptionVault/);
+  assert.match(poolVaults, /contract DivXRedemptionVault is TokenRedemptionVault/);
+  assert.match(poolVaults, /contract GSXRedemptionVault is TokenRedemptionVault/);
+  assert.match(poolVaults, /TokenRedemptionVault\(ORIGINAL_TOKEN, limitedToken_, initialOwner\)/);
+  assert.match(deploymentConfig, /"limitedToken": null/);
+  assert.match(deploymentConfig, /"vault": null/);
+  assert.match(compiler, /CashXRedemptionVault/);
+  assert.match(compiler, /GSXRedemptionVault/);
+});
+
+test("compiles four deployable pool artifacts with the required constructor inputs", async () => {
+  const contractNames = [
+    "CashXRedemptionVault",
+    "DistroXRedemptionVault",
+    "DivXRedemptionVault",
+    "GSXRedemptionVault",
+  ];
+
+  for (const contractName of contractNames) {
+    const artifact = JSON.parse(
+      await readFile(new URL(`../contracts/artifacts/${contractName}.json`, import.meta.url), "utf8"),
+    );
+    const constructor = artifact.abi.find((entry) => entry.type === "constructor");
+    const functions = new Set(
+      artifact.abi.filter((entry) => entry.type === "function").map((entry) => entry.name),
+    );
+
+    assert.equal(artifact.contractName, contractName);
+    assert.match(artifact.bytecode, /^0x[0-9a-f]{100,}$/i);
+    assert.deepEqual(
+      constructor.inputs.map((input) => [input.name, input.type]),
+      [["limitedToken_", "address"], ["initialOwner", "address"]],
+    );
+    for (const requiredFunction of ["redeem", "fund", "pause", "unpause", "reserve", "totalBurned"]) {
+      assert.equal(functions.has(requiredFunction), true, `${contractName} is missing ${requiredFunction}`);
+    }
+  }
 });

@@ -36,11 +36,34 @@ if (errors.length) {
   process.exit(1);
 }
 
-const vault = output.contracts["contracts/src/TokenRedemptionVault.sol"].TokenRedemptionVault;
 const artifactDir = path.join(root, "contracts", "artifacts");
 fs.mkdirSync(artifactDir, { recursive: true });
-fs.writeFileSync(
-  path.join(artifactDir, "TokenRedemptionVault.json"),
-  JSON.stringify({ abi: vault.abi, bytecode: `0x${vault.evm.bytecode.object}` }, null, 2),
-);
-process.stdout.write("TokenRedemptionVault compiled successfully.\n");
+
+const productionContracts = [
+  "CashXRedemptionVault",
+  "DistroXRedemptionVault",
+  "DivXRedemptionVault",
+  "GSXRedemptionVault",
+];
+
+for (const contractName of productionContracts) {
+  const contract = output.contracts["contracts/src/PoolRedemptionVaults.sol"][contractName];
+  fs.writeFileSync(
+    path.join(artifactDir, `${contractName}.json`),
+    JSON.stringify(
+      {
+        contractName,
+        sourceName: "contracts/src/PoolRedemptionVaults.sol",
+        abi: contract.abi,
+        bytecode: `0x${contract.evm.bytecode.object}`,
+      },
+      null,
+      2,
+    ),
+  );
+}
+
+const legacyArtifact = path.join(artifactDir, "TokenRedemptionVault.json");
+if (fs.existsSync(legacyArtifact)) fs.rmSync(legacyArtifact);
+
+process.stdout.write(`${productionContracts.join(", ")} compiled successfully.\n`);
