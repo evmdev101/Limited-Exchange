@@ -79,6 +79,34 @@ const vaultAbi = [
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
   },
+  {
+    type: "function",
+    name: "totalBurned",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalLimitedDistributed",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "redemptionCount",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "uniqueRedeemers",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
 
 type Pair = {
@@ -92,12 +120,26 @@ type Pair = {
   vaultAddress: Address;
 };
 
-// Replace these addresses after the four vaults and eight token contracts are confirmed.
+type PoolStats = {
+  totalBurned: bigint;
+  totalDistributed: bigint;
+  redemptions: bigint;
+  uniqueRedeemers: bigint;
+};
+
+const emptyStats: PoolStats = {
+  totalBurned: 0n,
+  totalDistributed: 0n,
+  redemptions: 0n,
+  uniqueRedeemers: 0n,
+};
+
+// Original PulseChain token addresses are confirmed. Add each limited token and vault after deployment.
 const pairs: Pair[] = [
-  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", decimals: 18, burnAddress: zeroAddress, receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", decimals: 18, burnAddress: zeroAddress, receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", decimals: 18, burnAddress: zeroAddress, receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", decimals: 18, burnAddress: zeroAddress, receiveAddress: zeroAddress, vaultAddress: zeroAddress },
+  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
+  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
+  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
+  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
 ];
 
 declare global {
@@ -110,6 +152,10 @@ function shortAddress(address: Address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function formatAmount(value: bigint, decimals: number, maximumFractionDigits = 2) {
+  return Number(formatUnits(value, decimals)).toLocaleString(undefined, { maximumFractionDigits });
+}
+
 export default function Home() {
   const [activeKey, setActiveKey] = useState("cashx");
   const [account, setAccount] = useState<Address | null>(null);
@@ -120,6 +166,8 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
+  const [stats, setStats] = useState<PoolStats>(emptyStats);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const pair = useMemo(
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
@@ -163,25 +211,35 @@ export default function Home() {
   }
 
   useEffect(() => {
-    if (!configured) {
-      setReserve(0n);
-      setBalance(0n);
-      return;
-    }
-
     let cancelled = false;
     async function loadPool() {
       try {
-        const reads: Promise<bigint>[] = [
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "reserve" }),
-        ];
-        if (account) {
-          reads.push(publicClient.readContract({ address: pair.burnAddress, abi: erc20Abi, functionName: "balanceOf", args: [account] }));
+        const balancePromise = account
+          ? publicClient.readContract({ address: pair.burnAddress, abi: erc20Abi, functionName: "balanceOf", args: [account] })
+          : Promise.resolve(0n);
+
+        if (!configured) {
+          const nextBalance = await balancePromise;
+          if (!cancelled) {
+            setReserve(0n);
+            setBalance(nextBalance);
+            setStats(emptyStats);
+          }
+          return;
         }
-        const values = await Promise.all(reads);
+
+        const [nextReserve, totalBurned, totalDistributed, redemptions, uniqueRedeemers, nextBalance] = await Promise.all([
+          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "reserve" }),
+          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "totalBurned" }),
+          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "totalLimitedDistributed" }),
+          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "redemptionCount" }),
+          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "uniqueRedeemers" }),
+          balancePromise,
+        ]);
         if (!cancelled) {
-          setReserve(values[0]);
-          setBalance(values[1] ?? 0n);
+          setReserve(nextReserve);
+          setBalance(nextBalance);
+          setStats({ totalBurned, totalDistributed, redemptions, uniqueRedeemers });
         }
       } catch {
         if (!cancelled) setStatus("Unable to read this pool right now.");
@@ -189,7 +247,7 @@ export default function Home() {
     }
     loadPool();
     return () => { cancelled = true; };
-  }, [account, configured, pair]);
+  }, [account, configured, pair, refreshKey]);
 
   async function getWallet() {
     if (!window.ethereum || !account) throw new Error("Connect wallet first");
@@ -236,6 +294,7 @@ export default function Home() {
       });
       await publicClient.waitForTransactionReceipt({ hash });
       setAmount("");
+      setRefreshKey((value) => value + 1);
       setStatus(`${pair.receive} received successfully`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Transaction cancelled");
@@ -273,6 +332,7 @@ export default function Home() {
       });
       await publicClient.waitForTransactionReceipt({ hash: fundHash });
       setFundAmount("");
+      setRefreshKey((value) => value + 1);
       setStatus(`${pair.receive} pool refilled`);
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Refill cancelled");
@@ -338,7 +398,7 @@ export default function Home() {
 
             <label className="amount-panel">
               <span>You burn</span>
-              <span className="balance">Balance: {account ? Number(formatUnits(balance, pair.decimals)).toLocaleString(undefined, { maximumFractionDigits: 4 }) : "—"}</span>
+              <span className="balance">Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</span>
               <div>
                 <input
                   inputMode="decimal"
@@ -361,7 +421,7 @@ export default function Home() {
 
             <div className="pool-meta">
               <span>Available reserve</span>
-              <strong>{configured ? Number(formatUnits(reserve, pair.decimals)).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "Pending"} {pair.receive}</strong>
+              <strong>{configured ? formatAmount(reserve, pair.decimals) : "Pending"} {pair.receive}</strong>
             </div>
 
             <button className="redeem-button" type="button" onClick={redeem} disabled={busy}>
@@ -375,11 +435,18 @@ export default function Home() {
               <span className="card-kicker">POOL STATUS</span>
               <h3>{pair.label}</h3>
               <div className="orb"><span>1:1</span><small>FIXED RATE</small></div>
+              <div className="pool-stats" aria-label={`${pair.burn} redemption statistics`}>
+                <div><span>Total burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
+                <div><span>{pair.receive} distributed</span><strong>{configured ? formatAmount(stats.totalDistributed, pair.decimals) : "Pending"}</strong></div>
+                <div><span>Redemptions</span><strong>{configured ? stats.redemptions.toLocaleString() : "—"}</strong></div>
+                <div><span>Unique wallets</span><strong>{configured ? stats.uniqueRedeemers.toLocaleString() : "—"}</strong></div>
+              </div>
               <dl>
                 <div><dt>Network</dt><dd>PulseChain</dd></div>
                 <div><dt>Input</dt><dd>{pair.burn}</dd></div>
                 <div><dt>Output</dt><dd>{pair.receive}</dd></div>
                 <div><dt>Mechanism</dt><dd>Burn & transfer</dd></div>
+                <div><dt>Original contract</dt><dd><a href={`https://scan.pulsechain.com/address/${pair.burnAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.burnAddress)} ↗</a></dd></div>
               </dl>
             </div>
 

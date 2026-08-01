@@ -335,10 +335,16 @@ body.bg-pattern-synapse {
 .orb { width: 130px; height: 130px; margin: 30px auto; display: grid; place-content: center; text-align: center; border: 1px solid color-mix(in srgb, var(--fg) 35%, transparent); border-radius: 50%; background: radial-gradient(circle, color-mix(in srgb, var(--fg) 12%, var(--panel)), var(--panel) 62%); box-shadow: 0 0 40px color-mix(in srgb, var(--fg) 8%, transparent), inset 0 0 25px color-mix(in srgb, var(--fg) 8%, transparent); }
 .orb span { color: var(--cyan); font-size: 30px; font-weight: 850; }
 .orb small { color: var(--cyan-dim); font: 8px var(--font-geist-mono), monospace; letter-spacing: .16em; }
+.pool-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 0 0 22px; }
+.pool-stats > div { min-width: 0; padding: 11px; border: 1px solid var(--border); border-radius: 9px; background: color-mix(in srgb, var(--fg) 3%, var(--panel)); }
+.pool-stats span { display: block; min-height: 25px; color: var(--muted); font: 8px/1.4 var(--font-geist-mono), monospace; text-transform: uppercase; letter-spacing: .06em; }
+.pool-stats strong { display: block; overflow: hidden; margin-top: 5px; color: var(--fg); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .supply-card dl { margin: 0; }
 .supply-card dl div { display: flex; justify-content: space-between; padding: 12px 0; border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent); font-size: 12px; }
 .supply-card dt { color: var(--muted); }
 .supply-card dd { margin: 0; color: var(--fg); }
+.supply-card dd a { color: var(--fg); text-decoration: none; }
+.supply-card dd a:hover { color: var(--red); }
 .admin-toggle { display: flex; justify-content: space-between; width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 13px 15px; color: color-mix(in srgb, var(--fg) 62%, transparent); background: var(--panel); cursor: pointer; }
 .admin-panel { padding: 18px; }
 .admin-panel p { margin: 0 0 14px; color: var(--cyan); font-size: 13px; }
