@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  applyBgEffectColor,
+  applyBgEffectIntensity,
+  applyBgEffectSize,
+  applyBgPattern,
+  applyFrostedGlass,
+  BG_PATTERNS,
+} from "./themeEffects";
 
 type ThemeColors = {
   bg: string;
@@ -44,11 +52,10 @@ const themes: Record<string, ThemeColors> = {
   cute: { bg: "#fff0f5", fg: "#d4608a", panel: "#fff8fa", border: "#f0c0d0", red: "#ff6b9d" },
 };
 
-const patterns = ["none", "dots", "synapse", "rain", "constellations", "perlin-flow", "petals", "sparkles", "embers"];
 const storageKey = "limited-exchange-theme-v1";
 const defaultBackground: BackgroundSettings = {
   pattern: "none",
-  effectColor: themes.dark.fg,
+  effectColor: "",
   intensity: 1,
   size: 1,
   frosted: false,
@@ -81,12 +88,11 @@ function applyColors(colors: ThemeColors) {
 }
 
 function applyBackground(settings: BackgroundSettings) {
-  document.body.dataset.themePattern = settings.pattern;
-  document.body.classList.toggle("theme-frosted", settings.frosted);
-  const style = document.documentElement.style;
-  style.setProperty("--effect-color", settings.effectColor);
-  style.setProperty("--effect-strength", `${Math.round(3 + settings.intensity * 8)}%`);
-  style.setProperty("--effect-spacing", `${Math.round(18 * settings.size)}px`);
+  applyBgEffectColor(settings.effectColor);
+  applyBgEffectIntensity(settings.intensity);
+  applyBgEffectSize(settings.size);
+  applyFrostedGlass(settings.frosted);
+  applyBgPattern(settings.pattern);
 }
 
 function saveTheme(name: string, colors: ThemeColors, background: BackgroundSettings) {
@@ -136,7 +142,6 @@ export default function ThemePicker() {
     const nextColors = themes[name];
     const nextBackground = {
       ...defaultBackground,
-      effectColor: nextColors.fg,
       ...themeDefaults[name],
     };
     setActiveName(name);
@@ -240,12 +245,12 @@ export default function ThemePicker() {
                       <label>
                         <span>Animation</span>
                         <select value={background.pattern} onChange={(event) => changeBackground({ ...background, pattern: event.target.value })}>
-                          {patterns.map((pattern) => <option key={pattern} value={pattern}>{pattern}</option>)}
+                          {BG_PATTERNS.map((pattern: string) => <option key={pattern} value={pattern}>{pattern}</option>)}
                         </select>
                       </label>
                       <label>
                         <span>Effect color</span>
-                        <input type="color" value={background.effectColor} onChange={(event) => changeBackground({ ...background, effectColor: event.target.value })} />
+                        <input type="color" value={background.effectColor || colors.fg} onChange={(event) => changeBackground({ ...background, effectColor: event.target.value })} />
                       </label>
                       <label>
                         <span>Intensity</span>

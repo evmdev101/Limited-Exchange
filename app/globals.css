@@ -7,9 +7,9 @@
   --panel: #111111;
   --border: #355a66;
   --red: #e06c75;
-  --effect-color: var(--fg);
-  --effect-strength: 11%;
-  --effect-spacing: 18px;
+  --bg-effect-color: var(--fg);
+  --bg-effect-intensity: 1;
+  --bg-effect-size: 1;
   --ink: var(--bg);
   --panel-2: var(--panel);
   --line: var(--border);
@@ -33,56 +33,27 @@ button, a { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
 
 .site-shell {
+  position: relative;
+  z-index: 1;
   min-height: 100vh;
   overflow: hidden;
-  background: var(--bg);
-  transition: background-color .2s ease, color .2s ease;
+  background: transparent;
+  transition: color .2s ease;
 }
 
-body[data-theme-pattern="dots"] .site-shell {
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 1px, transparent 1.5px);
-  background-size: var(--effect-spacing) var(--effect-spacing);
+/* Exact static pattern bases from cashmoney-mint/src/index.css. The other
+   patterns are rendered by the source-matched canvas engine. */
+body.bg-pattern-dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--bg-effect-color, var(--fg)) calc(5% * var(--bg-effect-intensity, 1)), transparent) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
 }
-body[data-theme-pattern="synapse"] .site-shell {
-  background-image: linear-gradient(45deg, transparent 48%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 49% 51%, transparent 52%), linear-gradient(-45deg, transparent 48%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 49% 51%, transparent 52%);
-  background-size: calc(var(--effect-spacing) * 2) calc(var(--effect-spacing) * 2);
-  animation: theme-drift 16s linear infinite;
+body.bg-pattern-synapse {
+  background-image: linear-gradient(color-mix(in srgb, var(--bg-effect-color, var(--fg)) calc(3.5% * var(--bg-effect-intensity, 1)), transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--bg-effect-color, var(--fg)) calc(3.5% * var(--bg-effect-intensity, 1)), transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
 }
-body[data-theme-pattern="rain"] .site-shell {
-  background-image: repeating-linear-gradient(104deg, transparent 0 calc(var(--effect-spacing) - 1px), color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) var(--effect-spacing) calc(var(--effect-spacing) + 1px));
-  animation: theme-rain 12s linear infinite;
-}
-body[data-theme-pattern="constellations"] .site-shell {
-  background-image: radial-gradient(circle at 15% 22%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 1.5px, transparent 2px), radial-gradient(circle at 74% 36%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 1px, transparent 2px), radial-gradient(circle at 46% 82%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 1.5px, transparent 2px);
-  background-size: calc(var(--effect-spacing) * 6) calc(var(--effect-spacing) * 5);
-  animation: theme-drift 22s linear infinite;
-}
-body[data-theme-pattern="perlin-flow"] .site-shell {
-  background-image: repeating-radial-gradient(ellipse at 20% 30%, transparent 0 calc(var(--effect-spacing) * 1.2), color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) calc(var(--effect-spacing) * 1.25) calc(var(--effect-spacing) * 1.32), transparent calc(var(--effect-spacing) * 1.4));
-  animation: theme-pulse 7s ease-in-out infinite alternate;
-}
-body[data-theme-pattern="petals"] .site-shell {
-  background-image: radial-gradient(ellipse at 20% 10%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 3px, transparent 4px), radial-gradient(ellipse at 70% 65%, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 4px, transparent 5px);
-  background-size: calc(var(--effect-spacing) * 4) calc(var(--effect-spacing) * 5);
-  animation: theme-fall 18s linear infinite;
-}
-body[data-theme-pattern="sparkles"] .site-shell {
-  background-image: radial-gradient(circle, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 1px, transparent 2px), radial-gradient(circle, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 2px, transparent 3px);
-  background-position: 0 0, calc(var(--effect-spacing) * 1.7) calc(var(--effect-spacing) * 1.2);
-  background-size: calc(var(--effect-spacing) * 4) calc(var(--effect-spacing) * 4);
-  animation: theme-pulse 4s ease-in-out infinite alternate;
-}
-body[data-theme-pattern="embers"] .site-shell {
-  background-image: radial-gradient(circle at center, color-mix(in srgb, var(--effect-color) var(--effect-strength), transparent) 0 2px, transparent 3px);
-  background-size: calc(var(--effect-spacing) * 3) calc(var(--effect-spacing) * 4);
-  animation: theme-rise 10s linear infinite;
-}
-
-@keyframes theme-drift { to { background-position: calc(var(--effect-spacing) * 2) calc(var(--effect-spacing) * 2); } }
-@keyframes theme-rain { to { background-position: calc(var(--effect-spacing) * 4) calc(var(--effect-spacing) * 8); } }
-@keyframes theme-fall { to { background-position: calc(var(--effect-spacing) * 2) calc(var(--effect-spacing) * 5); } }
-@keyframes theme-rise { to { background-position: 0 calc(var(--effect-spacing) * -4); } }
-@keyframes theme-pulse { from { background-position: 0 0; } to { background-position: var(--effect-spacing) calc(var(--effect-spacing) * .5); } }
 
 .topbar {
   position: relative;
@@ -133,10 +104,12 @@ body[data-theme-pattern="embers"] .site-shell {
 .theme-window {
   position: fixed;
   z-index: 100;
-  top: 84px;
-  right: 24px;
+  top: 50vh;
+  left: 50vw;
+  right: auto;
+  transform: translate(-50%, -50%);
   width: min(540px, calc(100vw - 32px));
-  max-height: calc(100vh - 105px);
+  max-height: 82vh;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 12px;
@@ -326,8 +299,8 @@ footer a { color: var(--cyan-dim); text-decoration: none; }
   .topnav { gap: 10px; }
   .theme-launcher { padding: 9px 10px; font-size: 10px; }
   .wallet-button { padding: 10px 12px; font-size: 12px; }
-  .theme-window { top: 70px; right: 16px; max-height: calc(100vh - 86px); }
-  .theme-window-body { max-height: calc(100vh - 185px); }
+  .theme-window { top: 50vh; left: 50vw; right: auto; max-height: calc(100vh - 32px); }
+  .theme-window-body { max-height: calc(100vh - 132px); }
   .theme-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .hero { padding: 55px 20px 42px; }
   .hero h1 { font-size: 48px; }

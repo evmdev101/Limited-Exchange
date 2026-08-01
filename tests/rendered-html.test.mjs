@@ -36,9 +36,10 @@ test("server-renders the Limited Exchange redemption interface", async () => {
 });
 
 test("ships the source-matched theme and atomic redemption contract", async () => {
-  const [page, themePicker, layout, styles, packageJson, vault] = await Promise.all([
+  const [page, themePicker, themeEffects, layout, styles, packageJson, vault] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ThemePicker.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/themeEffects.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
@@ -53,6 +54,15 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(themePicker, /#282c34.*#9cdef2.*#111111.*#355a66.*#e06c75/);
   assert.match(themePicker, /Apply Custom Theme/);
   assert.match(themePicker, /limited-exchange-theme-v1/);
+  assert.match(themePicker, /light:\s*\{ pattern: "dots" \}/);
+  assert.match(themePicker, /cyberpunk:\s*\{ pattern: "synapse" \}/);
+  assert.match(themePicker, /retrowave:\s*\{ pattern: "embers" \}/);
+  assert.match(themePicker, /ocean:\s*\{ pattern: "constellations" \}/);
+  assert.match(themeEffects, /function _initRain\(\)/);
+  assert.match(themeEffects, /function _initPerlinFlow\(\)/);
+  assert.match(themeEffects, /function _initSparkles\(\)/);
+  assert.match(styles, /body\.bg-pattern-dots/);
+  assert.match(styles, /\.theme-window\s*\{[\s\S]*top:\s*50vh[\s\S]*left:\s*50vw/);
   assert.match(layout, /Limited Exchange/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);
