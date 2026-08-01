@@ -296,7 +296,7 @@ body.bg-pattern-synapse {
 }
 .exchange-card { padding: 30px; }
 .card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
-.card-heading h2 { margin: 8px 0 0; font-size: 25px; letter-spacing: -.03em; }
+.card-heading h2 { margin: 0; font-size: 25px; letter-spacing: -.03em; }
 .card-heading h2 span { color: var(--pink); padding: 0 5px; }
 .amount-panel, .receive-panel { display: block; margin-top: 28px; border: 1px solid var(--border); border-radius: 12px; padding: 15px 16px 17px; background: var(--panel); }
 .amount-panel > span, .receive-panel > span { color: var(--muted); font-size: 12px; }

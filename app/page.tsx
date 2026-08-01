@@ -400,7 +400,6 @@ export default function Home() {
           <article className="exchange-card">
             <div className="card-heading">
               <div>
-                <span className="card-kicker">ACTIVE PAIR</span>
                 <h2>{pair.burn} <span>→</span> {pair.receive}</h2>
               </div>
             </div>
