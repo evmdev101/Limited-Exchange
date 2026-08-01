@@ -403,9 +403,6 @@ export default function Home() {
                 <span className="card-kicker">ACTIVE PAIR</span>
                 <h2>{pair.burn} <span>→</span> {pair.receive}</h2>
               </div>
-              <span className={`network-pill ${configured ? "live" : "pending"}`}>
-                {configured ? "● LIVE" : "● AWAITING DEPLOYMENT"}
-              </span>
             </div>
 
             <label className="amount-panel">
