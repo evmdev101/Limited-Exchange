@@ -54,6 +54,9 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(themePicker, /#282c34.*#9cdef2.*#111111.*#355a66.*#e06c75/);
   assert.match(themePicker, /Apply Custom Theme/);
   assert.match(themePicker, /limited-exchange-theme-v1/);
+  assert.match(themePicker, /setPointerCapture/);
+  assert.match(themePicker, /function onHeaderPointerMove/);
+  assert.match(themePicker, /function snapZoneFor/);
   assert.match(themePicker, /light:\s*\{ pattern: "dots" \}/);
   assert.match(themePicker, /cyberpunk:\s*\{ pattern: "synapse" \}/);
   assert.match(themePicker, /retrowave:\s*\{ pattern: "embers" \}/);
@@ -63,6 +66,8 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(themeEffects, /function _initSparkles\(\)/);
   assert.match(styles, /body\.bg-pattern-dots/);
   assert.match(styles, /\.theme-window\s*\{[\s\S]*top:\s*50vh[\s\S]*left:\s*50vw/);
+  assert.match(styles, /\.theme-window-title[\s\S]*cursor:\s*grab/);
+  assert.match(styles, /\.theme-snap-hint/);
   assert.match(layout, /Limited Exchange/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);

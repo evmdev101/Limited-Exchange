@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import {
   applyBgEffectColor,
   applyBgEffectIntensity,
@@ -31,6 +32,29 @@ type StoredTheme = {
   colors: ThemeColors;
   background: BackgroundSettings;
 };
+
+type WindowPosition = { left: number; top: number };
+type SnapZone = "left" | "right" | "full" | null;
+
+const topSnapDistance = 14;
+const sideSnapDistance = 48;
+
+function snapZoneFor(x: number, y: number): SnapZone {
+  if (y <= topSnapDistance) return "full";
+  if (x <= sideSnapDistance) return "left";
+  if (x >= window.innerWidth - sideSnapDistance) return "right";
+  return null;
+}
+
+function snappedWindowStyle(zone: Exclude<SnapZone, null>): CSSProperties {
+  if (zone === "full") {
+    return { inset: 0, width: "auto", height: "auto", maxHeight: "none", transform: "none", borderRadius: 0 };
+  }
+  if (zone === "left") {
+    return { left: 0, top: 0, right: "auto", width: "min(50vw, 480px)", height: "100vh", maxHeight: "none", transform: "none" };
+  }
+  return { right: 0, left: "auto", top: 0, width: "min(50vw, 480px)", height: "100vh", maxHeight: "none", transform: "none" };
+}
 
 // Exact presets from cashmoney-mint/src/themes.js.
 const themes: Record<string, ThemeColors> = {
@@ -107,6 +131,12 @@ export default function ThemePicker() {
   const [colors, setColors] = useState<ThemeColors>(themes.dark);
   const [draft, setDraft] = useState<ThemeColors>(themes.dark);
   const [background, setBackground] = useState<BackgroundSettings>(defaultBackground);
+  const [position, setPosition] = useState<WindowPosition | null>(null);
+  const [snap, setSnap] = useState<SnapZone>(null);
+  const [snapHint, setSnapHint] = useState<SnapZone>(null);
+  const [dragging, setDragging] = useState(false);
+  const windowRef = useRef<HTMLElement>(null);
+  const dragRef = useRef({ active: false, startX: 0, startY: 0, baseLeft: 0, baseTop: 0 });
 
   useEffect(() => {
     try {
@@ -166,21 +196,98 @@ export default function ThemePicker() {
     saveTheme(activeName, colors, next);
   }
 
+  function launchPicker() {
+    setTab("themes");
+    setMinimized(false);
+    setPosition(null);
+    setSnap(null);
+    setSnapHint(null);
+    setOpen(true);
+  }
+
+  function onHeaderPointerDown(event: ReactPointerEvent<HTMLElement>) {
+    if ((event.target as Element).closest("button")) return;
+    const rect = windowRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    setSnap(null);
+    setPosition({ left: rect.left, top: rect.top });
+    setDragging(true);
+    dragRef.current = {
+      active: true,
+      startX: event.clientX,
+      startY: event.clientY,
+      baseLeft: rect.left,
+      baseTop: rect.top,
+    };
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+    event.preventDefault();
+  }
+
+  function onHeaderPointerMove(event: ReactPointerEvent<HTMLElement>) {
+    if (!dragRef.current.active) return;
+    const { startX, startY, baseLeft, baseTop } = dragRef.current;
+    const rect = windowRef.current?.getBoundingClientRect();
+    const minimumVisible = 72;
+    const width = rect?.width ?? 540;
+    const height = rect?.height ?? 48;
+    const nextLeft = baseLeft + event.clientX - startX;
+    const nextTop = baseTop + event.clientY - startY;
+
+    setPosition({
+      left: Math.min(window.innerWidth - minimumVisible, Math.max(minimumVisible - width, nextLeft)),
+      top: Math.min(window.innerHeight - 42, Math.max(0, Math.min(nextTop, window.innerHeight - Math.min(height, 48)))),
+    });
+    setSnapHint(snapZoneFor(event.clientX, event.clientY));
+  }
+
+  function onHeaderPointerUp(event: ReactPointerEvent<HTMLElement>) {
+    if (!dragRef.current.active) return;
+    dragRef.current.active = false;
+    setDragging(false);
+    const nextSnap = snapZoneFor(event.clientX, event.clientY);
+    setSnapHint(null);
+    if (nextSnap) setSnap(nextSnap);
+  }
+
+  function onHeaderLostPointerCapture() {
+    if (!dragRef.current.active) return;
+    dragRef.current.active = false;
+    setDragging(false);
+    setSnapHint(null);
+  }
+
+  const windowStyle: CSSProperties | undefined = snap
+    ? snappedWindowStyle(snap)
+    : position
+      ? { left: position.left, top: position.top, right: "auto", transform: "none" }
+      : undefined;
+
   return (
     <>
       <button
         className="theme-launcher"
         type="button"
-        onClick={() => { setOpen(true); setMinimized(false); }}
+        onClick={launchPicker}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
         <span aria-hidden="true">◉</span> Theme
       </button>
 
+      {snapHint && <div className={`theme-snap-hint ${snapHint}`} aria-hidden="true" />}
+
       {open && (
-        <section className={`theme-window${minimized ? " minimized" : ""}`} role="dialog" aria-label="Theme picker">
-          <header className="theme-window-title">
+        <section ref={windowRef} className={`theme-window${minimized ? " minimized" : ""}${dragging ? " dragging" : ""}${snap ? ` snapped ${snap}` : ""}`} role="dialog" aria-label="Theme picker" style={windowStyle}>
+          <header
+            className="theme-window-title"
+            onPointerDown={onHeaderPointerDown}
+            onPointerMove={onHeaderPointerMove}
+            onPointerUp={onHeaderPointerUp}
+            onPointerCancel={onHeaderPointerUp}
+            onLostPointerCapture={onHeaderLostPointerCapture}
+            title="Drag to move. Drop at an edge to snap."
+          >
             <strong>◉ Theme</strong>
             <div>
               <button type="button" onClick={() => setMinimized((value) => !value)} aria-label={minimized ? "Restore theme window" : "Minimize theme window"}>

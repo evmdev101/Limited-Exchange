@@ -118,6 +118,7 @@ body.bg-pattern-synapse {
   box-shadow: 0 28px 90px color-mix(in srgb, var(--bg) 76%, transparent), 0 0 48px color-mix(in srgb, var(--red) 18%, transparent);
 }
 .theme-window.minimized { width: min(360px, calc(100vw - 32px)); }
+.theme-window.snapped { border-radius: 0; }
 .theme-window button, .theme-window select, .theme-window input { font-family: var(--font-geist-mono), monospace; }
 .theme-window-title {
   min-height: 48px;
@@ -126,7 +127,11 @@ body.bg-pattern-synapse {
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--border);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
+.theme-window.dragging .theme-window-title { cursor: grabbing; }
 .theme-window-title strong { color: var(--red); font: 800 13px var(--font-geist-mono), monospace; }
 .theme-window-title div { display: flex; gap: 7px; }
 .theme-window-title button {
@@ -190,6 +195,17 @@ body.bg-pattern-synapse {
   background: color-mix(in srgb, var(--panel) 68%, transparent);
   backdrop-filter: blur(18px) saturate(1.2);
 }
+
+.theme-snap-hint {
+  position: fixed;
+  z-index: 99;
+  pointer-events: none;
+  border: 2px dashed color-mix(in srgb, var(--red) 65%, transparent);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+}
+.theme-snap-hint.full { inset: 0; }
+.theme-snap-hint.left { inset: 0 50vw 0 0; }
+.theme-snap-hint.right { inset: 0 0 0 50vw; }
 
 .hero { max-width: 1120px; margin: auto; padding: 78px 34px 54px; }
 .eyebrow, .card-kicker {
