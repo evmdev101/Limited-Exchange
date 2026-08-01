@@ -168,12 +168,24 @@ export default function Home() {
   const [fundAmount, setFundAmount] = useState("");
   const [stats, setStats] = useState<PoolStats>(emptyStats);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [copiedAddress, setCopiedAddress] = useState<Address | null>(null);
 
   const pair = useMemo(
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
     [activeKey],
   );
   const configured = pair.vaultAddress !== zeroAddress;
+
+  async function copyAddress(address: Address) {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setStatus(`${pair.burn} contract address copied`);
+      window.setTimeout(() => setCopiedAddress(null), 1800);
+    } catch {
+      setStatus("Unable to copy the address. Please copy it from the explorer.");
+    }
+  }
 
   async function connectWallet() {
     if (!window.ethereum) {
@@ -407,8 +419,20 @@ export default function Home() {
                   value={amount}
                   onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))}
                 />
-                <button type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
-                <b>{pair.burn}</b>
+                <button className="max-button" type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
+                <div className="token-identity">
+                  <b>{pair.burn}</b>
+                  <button
+                    className="copy-address"
+                    type="button"
+                    title={pair.burnAddress}
+                    aria-label={`Copy ${pair.burn} contract address`}
+                    onClick={() => copyAddress(pair.burnAddress)}
+                  >
+                    <span>{shortAddress(pair.burnAddress)}</span>
+                    <span aria-hidden="true">{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</span>
+                  </button>
+                </div>
               </div>
             </label>
 
@@ -416,7 +440,13 @@ export default function Home() {
 
             <div className="receive-panel">
               <span>You receive</span>
-              <div><strong>{amount || "0.00"}</strong><b>{pair.receive}</b></div>
+              <div>
+                <strong>{amount || "0.00"}</strong>
+                <div className="token-identity">
+                  <b>{pair.receive}</b>
+                  <span className="address-pending">Address pending</span>
+                </div>
+              </div>
             </div>
 
             <div className="pool-meta">
@@ -446,7 +476,14 @@ export default function Home() {
                 <div><dt>Input</dt><dd>{pair.burn}</dd></div>
                 <div><dt>Output</dt><dd>{pair.receive}</dd></div>
                 <div><dt>Mechanism</dt><dd>Burn & transfer</dd></div>
-                <div><dt>Original contract</dt><dd><a href={`https://scan.pulsechain.com/address/${pair.burnAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.burnAddress)} ↗</a></dd></div>
+                <div>
+                  <dt>Original contract</dt>
+                  <dd className="contract-actions">
+                    <a href={`https://scan.pulsechain.com/address/${pair.burnAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.burnAddress)} ↗</a>
+                    <button type="button" title={`Copy ${pair.burn} address`} aria-label={`Copy ${pair.burn} contract address`} onClick={() => copyAddress(pair.burnAddress)}>{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</button>
+                  </dd>
+                </div>
+                <div><dt>Limited contract</dt><dd className="address-pending">Pending</dd></div>
               </dl>
             </div>
 

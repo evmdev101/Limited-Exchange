@@ -56,6 +56,10 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(page, /0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e/);
   assert.match(page, /Total burned/);
   assert.match(page, /Unique wallets/);
+  assert.match(page, /navigator\.clipboard\.writeText\(address\)/);
+  assert.match(page, /Copy.*contract address/);
+  assert.match(page, /Address pending/);
+  assert.match(page, /Limited contract/);
   assert.match(page, /<ThemePicker \/>/);
   assert.match(themePicker, /#282c34.*#9cdef2.*#111111.*#355a66.*#e06c75/);
   assert.match(themePicker, /Apply Custom Theme/);
