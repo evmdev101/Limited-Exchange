@@ -115,6 +115,7 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(styles, /\.theme-pro-tip/);
   assert.match(styles, /@keyframes th-modal-slide/);
   assert.match(layout, /Limited Exchange/);
+  assert.match(layout, /family=Chakra\+Petch:wght@400;500;600;700/);
   assert.doesNotMatch(page, /Nexion/i);
   assert.doesNotMatch(layout, /Nexion/i);
   assert.match(styles, /--bg:\s*#282c34/);
@@ -127,6 +128,7 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(styles, /\.nav-actions\s*\{/);
   assert.match(styles, /\.topbar\s*\{[\s\S]*position:\s*sticky[\s\S]*top:\s*0/);
   assert.match(styles, /\.social-icon\s*\{/);
+  assert.match(styles, /\.quick-field-row > input, \.quick-receive-field strong, \.amount-panel input, \.receive-panel strong\s*\{[\s\S]*font-family:\s*"Chakra Petch"[\s\S]*font-variant-numeric:\s*lining-nums tabular-nums/);
   assert.match(styles, /\.topbar\s*\{[\s\S]*height:\s*78px[\s\S]*padding:\s*0 40px/);
   assert.match(styles, /\.social-icon\s*\{[\s\S]*width:\s*38px[\s\S]*height:\s*38px/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);

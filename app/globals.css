@@ -335,7 +335,7 @@ body.bg-pattern-synapse {
 .quick-field-label button { border: 0; border-radius: 5px; padding: 5px 7px; color: var(--red); background: color-mix(in srgb, var(--red) 11%, transparent); cursor: pointer; font-size: 9px; font-weight: 850; }
 .quick-field-label small { color: var(--muted); font: 8px var(--font-geist-mono), monospace; }
 .quick-field-row { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
-.quick-field-row > input { width: 100%; min-width: 0; border: 0; outline: 0; padding: 0; color: var(--fg); background: transparent; font-size: 27px; font-weight: 750; }
+.quick-field-row > input { width: 100%; min-width: 0; border: 0; outline: 0; padding: 0; color: var(--fg); background: transparent; font-size: 27px; font-weight: 700; }
 .quick-field-row > input::placeholder { color: color-mix(in srgb, var(--fg) 28%, transparent); }
 .quick-field > small { display: block; margin-top: 7px; color: color-mix(in srgb, var(--muted) 74%, transparent); font: 8px var(--font-geist-mono), monospace; }
 .quick-token-trigger, .quick-token-locked {
@@ -361,6 +361,12 @@ body.bg-pattern-synapse {
 .quick-rate small { font: 7px var(--font-geist-mono), monospace; letter-spacing: .08em; }
 .quick-receive-field { background: color-mix(in srgb, var(--fg) 8%, var(--panel)); }
 .quick-receive-field strong { width: 100%; min-width: 0; overflow: hidden; color: var(--fg); font-size: 27px; text-overflow: ellipsis; }
+.quick-field-row > input, .quick-receive-field strong, .amount-panel input, .receive-panel strong {
+  font-family: "Chakra Petch", sans-serif;
+  font-weight: 700;
+  font-variant-numeric: lining-nums tabular-nums;
+  letter-spacing: -.025em;
+}
 .quick-exchange-button {
   width: 100%;
   margin-top: 15px;
