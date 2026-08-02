@@ -425,13 +425,8 @@ export default function Home() {
               className={item.key === activeKey ? "active" : ""}
               onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Local contract tests passed — live deployment pending"); }}
             >
-              <span className="pool-tab-content">
-                <img className="pair-logo" src={item.logo} alt="" aria-hidden="true" />
-                <span>
-                  <small>{item.burn}</small>
-                  <strong>{item.receive}</strong>
-                </span>
-              </span>
+              <small>{item.burn}</small>
+              <strong>{item.receive}</strong>
             </button>
           ))}
         </div>

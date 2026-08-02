@@ -325,9 +325,7 @@ body.bg-pattern-synapse {
 .pool-tabs button::after { content: ""; position: absolute; left: 20px; right: 20px; bottom: -1px; height: 2px; background: transparent; }
 .pool-tabs button.active { color: var(--fg); background: color-mix(in srgb, var(--fg) 3.5%, transparent); }
 .pool-tabs button.active::after { background: var(--red); box-shadow: 0 0 14px color-mix(in srgb, var(--red) 65%, transparent); }
-.pool-tab-content { display: flex; align-items: center; gap: 11px; }
-.pool-tab-content > span { min-width: 0; }
-.pair-logo, .token-logo {
+.token-logo {
   display: block;
   flex: 0 0 auto;
   border-radius: 50%;
@@ -336,7 +334,6 @@ body.bg-pattern-synapse {
   border: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
   box-shadow: 0 0 14px color-mix(in srgb, var(--red) 20%, transparent);
 }
-.pair-logo { width: 34px; height: 34px; }
 .pool-tabs small {
   display: block;
   font-family: "Permanent Marker", cursive;
