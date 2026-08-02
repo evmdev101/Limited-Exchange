@@ -143,6 +143,8 @@ const pairs: Pair[] = [
   { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", logo: "/tokens/gsx.png", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
 ];
 
+const burnSink: Address = "0x000000000000000000000000000000000000dEaD";
+
 declare global {
   interface Window {
     ethereum?: EIP1193Provider;
@@ -187,6 +189,8 @@ export default function Home() {
   const selectorRef = useRef<HTMLDivElement>(null);
   const [quickSelectorOpen, setQuickSelectorOpen] = useState(false);
   const quickSelectorRef = useRef<HTMLDivElement>(null);
+  const [walletModalOpen, setWalletModalOpen] = useState(false);
+  const [nativeBalance, setNativeBalance] = useState<bigint>(0n);
 
   const pair = useMemo(
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
@@ -241,6 +245,18 @@ export default function Home() {
     }
   }
 
+  async function copyWalletAddress() {
+    if (!account) return;
+    try {
+      await navigator.clipboard.writeText(account);
+      setCopiedAddress(account);
+      setStatus("Wallet address copied");
+      window.setTimeout(() => setCopiedAddress(null), 1800);
+    } catch {
+      setStatus("Unable to copy the wallet address.");
+    }
+  }
+
   async function connectWallet() {
     if (!window.ethereum) {
       setStatus("Install a browser wallet such as MetaMask or Rabby to continue.");
@@ -275,6 +291,49 @@ export default function Home() {
       }
     }
   }
+
+  function disconnectWallet() {
+    setWalletModalOpen(false);
+    setAccount(null);
+    setNativeBalance(0n);
+    setBalance(0n);
+    setAmount("");
+    setFundAmount("");
+    setAdminOpen(false);
+    setBusy(false);
+    setStatus("Wallet disconnected from this site");
+  }
+
+  async function handleWalletButton() {
+    if (account) {
+      setWalletModalOpen(true);
+      return;
+    }
+    await connectWallet();
+  }
+
+  useEffect(() => {
+    if (!walletModalOpen || !account) return;
+    let cancelled = false;
+
+    publicClient.getBalance({ address: account })
+      .then((value) => {
+        if (!cancelled) setNativeBalance(value);
+      })
+      .catch(() => {
+        if (!cancelled) setStatus("Unable to read the wallet PLS balance right now.");
+      });
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setWalletModalOpen(false);
+    }
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      cancelled = true;
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [account, walletModalOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -427,7 +486,7 @@ export default function Home() {
               <path d="M197.167 75.016c6.436-6.495 12.107-13.684 16.667-20.099l2.316 4.359c7.456 14.917 11.33 29.774 11.33 46.494l-.016 26.532.14 13.754c.54 33.766 7.846 67.929 24.396 99.193l-34.627-27.922-24.501 39.759-25.74-24.231L126 299.604l-41.132-66.748-25.739 24.231-24.501-39.759L0 245.25c16.55-31.264 23.856-65.427 24.397-99.193l.14-13.754-.016-26.532c0-16.721 3.873-31.578 11.331-46.494l2.315-4.359c4.56 6.415 10.23 13.603 16.667 20.099l-2.01 4.175c-3.905 8.109-5.198 17.176-2.156 25.799 1.961 5.554 5.54 10.317 10.154 13.953 4.48 3.531 9.782 5.911 15.333 7.161 3.616.814 7.3 1.149 10.96 1.035-.854 4.841-1.227 9.862-1.251 14.978L53.2 160.984l25.206 14.129a41.926 41.926 0 015.734 3.869c20.781 18.658 33.275 73.855 41.861 100.816 8.587-26.961 21.08-82.158 41.862-100.816a41.865 41.865 0 015.734-3.869l25.206-14.129-32.665-18.866c-.024-5.116-.397-10.137-1.251-14.978 3.66.114 7.344-.221 10.96-1.035 5.551-1.25 10.854-3.63 15.333-7.161 4.613-3.636 8.193-8.399 10.153-13.953 3.043-8.623 1.749-17.689-2.155-25.799l-2.01-4.175z" />
             </svg>
           </a>
-          <a className="social-icon" href="https://www.youtube.com/watch?v=UefZfzeoU_M" target="_blank" rel="noreferrer" aria-label="YouTube">
+          <a className="social-icon" href="https://www.youtube.com/watch?v=z_dfluPpyNI&t=522s" target="_blank" rel="noreferrer" aria-label="YouTube">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
@@ -438,11 +497,43 @@ export default function Home() {
         </nav>
         <div className="nav-actions">
           <ThemePicker />
-          <button className="wallet-button" type="button" onClick={connectWallet}>
+          <button
+            className="wallet-button"
+            type="button"
+            onClick={handleWalletButton}
+            aria-label={account ? `Open wallet details for ${shortAddress(account)}` : "Connect wallet"}
+            title={account ? "Wallet details" : "Connect wallet"}
+          >
             {account ? shortAddress(account) : "Connect wallet"}
           </button>
         </div>
       </header>
+
+      {walletModalOpen && account && (
+        <div
+          className="wallet-dialog-backdrop"
+          onPointerDown={(event) => {
+            if (event.target === event.currentTarget) setWalletModalOpen(false);
+          }}
+        >
+          <section className="wallet-dialog" role="dialog" aria-modal="true" aria-labelledby="wallet-dialog-address">
+            <button className="wallet-dialog-close" type="button" onClick={() => setWalletModalOpen(false)} aria-label="Close wallet details">×</button>
+            <div className="wallet-avatar" aria-hidden="true" />
+            <strong id="wallet-dialog-address" title={account}>{shortAddress(account)}</strong>
+            <span className="wallet-native-balance">{formatAmount(nativeBalance, 18, 2)} PLS</span>
+            <div className="wallet-dialog-actions">
+              <button type="button" onClick={copyWalletAddress}>
+                <b aria-hidden="true">⧉</b>
+                <span>{copiedAddress === account ? "Copied" : "Copy Address"}</span>
+              </button>
+              <button type="button" onClick={disconnectWallet}>
+                <b aria-hidden="true">↪</b>
+                <span>Disconnect</span>
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <section className="hero" id="top">
         <div className="hero-copy">
@@ -529,7 +620,7 @@ export default function Home() {
                 <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
                 <span className="quick-token-copy">
                   <b>{pair.receive}</b>
-                  <small>LOCKED 1:1</small>
+                  <small>{pair.label}</small>
                 </span>
               </div>
             </div>
@@ -637,7 +728,7 @@ export default function Home() {
                   <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
                   <span className="quick-token-copy">
                     <b>{pair.receive}</b>
-                    <small>LOCKED 1:1</small>
+                    <small>{pair.label}</small>
                   </span>
                 </div>
               </div>
@@ -670,6 +761,13 @@ export default function Home() {
                   <dd className="contract-actions">
                     <a href={`https://scan.pulsechain.com/address/${pair.burnAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.burnAddress)} ↗</a>
                     <button type="button" title={`Copy ${pair.burn} address`} aria-label={`Copy ${pair.burn} contract address`} onClick={() => copyAddress(pair.burnAddress, pair.burn)}>{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</button>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Token burn address</dt>
+                  <dd className="contract-actions">
+                    <a href={`https://scan.pulsechain.com/address/${burnSink}`} target="_blank" rel="noreferrer">{shortAddress(burnSink)} ↗</a>
+                    <button type="button" title="Copy token burn address" aria-label="Copy token burn address" onClick={() => copyAddress(burnSink, "token burn address")}>{copiedAddress === burnSink ? "✓" : "⧉"}</button>
                   </dd>
                 </div>
                 <div>
@@ -736,11 +834,30 @@ export default function Home() {
         </div>
       </section>
 
-      <footer>
-        <span>LIMITED EXCHANGE</span>
-        <p>Built for the community on PulseChain.</p>
-        <a href="https://scan.pulsechain.com" target="_blank" rel="noreferrer">View explorer ↗</a>
-      </footer>
+      <section className="faq-section" aria-labelledby="faq-heading">
+        <div className="faq-heading">
+          <h2 id="faq-heading">FAQ</h2>
+        </div>
+        <div className="faq-list">
+          <details>
+            <summary>How does the 1:1 exchange work?</summary>
+            <p>After any required token approval, the exchange burns 1 original token and sends you 1 matching limited token in the same transaction.</p>
+          </details>
+          <details>
+            <summary>Can burned tokens be recovered?</summary>
+            <p>No. Original tokens are sent to the permanent burn address and cannot be recovered.</p>
+          </details>
+          <details>
+            <summary>What if the limited-token reserve is empty?</summary>
+            <p>The exchange will not proceed, and your original tokens will remain in your wallet.</p>
+          </details>
+          <details>
+            <summary>How is each pool refilled?</summary>
+            <p>The owner approves and deposits more of the matching limited token into that pool’s burn exchange contract.</p>
+          </details>
+        </div>
+      </section>
+
     </main>
   );
 }
