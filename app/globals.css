@@ -298,8 +298,16 @@ body.bg-pattern-synapse {
 }
 .eyebrow { display: flex; align-items: center; gap: 10px; }
 .eyebrow span { width: 34px; height: 1px; background: var(--pink); }
-.hero h1 { max-width: 750px; margin: 20px 0 22px; font-size: clamp(48px, 7vw, 88px); line-height: .98; letter-spacing: -.065em; }
-.hero h1 em { color: var(--cyan); font-style: normal; font-weight: 450; }
+.hero h1 {
+  max-width: 860px;
+  margin: 20px 0 22px;
+  font-family: var(--font-permanent-marker), cursive;
+  font-size: clamp(48px, 7vw, 88px);
+  font-weight: 400;
+  line-height: .98;
+  letter-spacing: .01em;
+}
+.hero h1 em { color: var(--cyan); font-style: normal; font-weight: 400; }
 .hero > p { max-width: 670px; margin: 0; color: color-mix(in srgb, var(--fg) 68%, transparent); font-size: 17px; line-height: 1.7; }
 .trust-row { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 30px; color: color-mix(in srgb, var(--fg) 58%, transparent); font-family: var(--font-geist-mono), monospace; font-size: 11px; }
 
@@ -317,8 +325,21 @@ body.bg-pattern-synapse {
 .pool-tabs button::after { content: ""; position: absolute; left: 20px; right: 20px; bottom: -1px; height: 2px; background: transparent; }
 .pool-tabs button.active { color: var(--fg); background: color-mix(in srgb, var(--fg) 3.5%, transparent); }
 .pool-tabs button.active::after { background: var(--red); box-shadow: 0 0 14px color-mix(in srgb, var(--red) 65%, transparent); }
-.pool-tabs small { display: block; font-family: var(--font-geist-mono), monospace; font-size: 9px; letter-spacing: .12em; }
-.pool-tabs strong { display: block; margin-top: 5px; font-size: 17px; }
+.pool-tabs small {
+  display: block;
+  font-family: var(--font-permanent-marker), cursive;
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: .03em;
+}
+.pool-tabs strong {
+  display: block;
+  margin-top: 5px;
+  font-family: var(--font-permanent-marker), cursive;
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: .02em;
+}
 
 .exchange-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(285px, .75fr); gap: 20px; margin-top: 34px; }
 .exchange-card, .supply-card, .admin-panel {
