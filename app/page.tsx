@@ -405,7 +405,7 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <h1>Burn the original.<br /><em>Claim the limited.</em></h1>
+        <h1>Burn the original<br /><em>Claim the limited</em></h1>
         <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
       </section>
 
