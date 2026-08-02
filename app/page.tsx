@@ -156,6 +156,19 @@ function formatAmount(value: bigint, decimals: number, maximumFractionDigits = 2
   return Number(formatUnits(value, decimals)).toLocaleString(undefined, { maximumFractionDigits });
 }
 
+function normalizeAmountInput(value: string) {
+  const stripped = value.replace(/,/g, "").replace(/[^0-9.]/g, "");
+  const [whole = "", ...fractionParts] = stripped.split(".");
+  return fractionParts.length > 0 ? `${whole}.${fractionParts.join("")}` : whole;
+}
+
+function formatAmountInput(value: string) {
+  if (!value) return "";
+  const [whole, fraction] = value.split(".");
+  const groupedWhole = whole.replace(/^0+(?=\d)/, "").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction === undefined ? groupedWhole : `${groupedWhole}.${fraction}`;
+}
+
 export default function Home() {
   const [activeKey, setActiveKey] = useState("cashx");
   const [account, setAccount] = useState<Address | null>(null);
@@ -433,8 +446,8 @@ export default function Home() {
                   inputMode="decimal"
                   aria-label={`${pair.burn} amount to burn and exchange`}
                   placeholder="0.00"
-                  value={amount}
-                  onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))}
+                  value={formatAmountInput(amount)}
+                  onChange={(event) => setAmount(normalizeAmountInput(event.target.value))}
                 />
                 <button className="max-button" type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
                 <div className="token-identity">
@@ -458,7 +471,7 @@ export default function Home() {
             <div className="receive-panel">
               <span>You receive</span>
               <div>
-                <strong>{amount || "0.00"}</strong>
+                <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
                 <div className="token-identity">
                   <b>{pair.receive}</b>
                   <span className="address-pending">Address pending</span>

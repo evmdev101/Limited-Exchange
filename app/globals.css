@@ -357,6 +357,7 @@ body.bg-pattern-synapse {
 .amount-panel .balance { float: right; }
 .amount-panel > div, .receive-panel > div { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .amount-panel input { width: 100%; min-width: 0; padding: 0; border: 0; color: var(--fg); background: transparent; font-size: 31px; font-weight: 700; }
+.amount-panel input:focus, .amount-panel input:focus-visible { outline: none; }
 .amount-panel input::placeholder { color: color-mix(in srgb, var(--fg) 28%, transparent); }
 .amount-panel .max-button { border: 0; padding: 6px 8px; border-radius: 6px; color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); cursor: pointer; font-size: 10px; font-weight: 800; }
 .amount-panel b, .receive-panel b { color: var(--cyan); white-space: nowrap; }
