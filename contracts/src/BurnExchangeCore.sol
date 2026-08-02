@@ -8,11 +8,11 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title TokenRedemptionVault
-/// @notice Burns one supported token and releases its limited counterpart 1:1.
-/// @dev Deploy one vault per pair. Both tokens must use the same decimals. The
-/// original token must reduce totalSupply by the exact amount transferred to BURN_SINK.
-abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
+/// @title BurnExchangeCore
+/// @notice Burns one supported original token and sends its limited counterpart 1:1.
+/// @dev Shared logic for the four named burn exchanges. This abstract contract cannot
+/// be deployed by itself. Both tokens in a pair must use the same decimals.
+abstract contract BurnExchangeCore is Ownable, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
     address public constant BURN_SINK = 0x000000000000000000000000000000000000dEaD;
@@ -22,10 +22,10 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
 
     uint256 public totalBurned;
     uint256 public totalLimitedDistributed;
-    uint256 public redemptionCount;
-    uint256 public uniqueRedeemers;
+    uint256 public exchangeCount;
+    uint256 public uniqueExchangers;
 
-    mapping(address account => bool) public hasRedeemed;
+    mapping(address account => bool) public hasExchanged;
     mapping(address account => uint256 amount) public accountBurned;
 
     error ZeroAddress();
@@ -37,11 +37,11 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
     error ExactOutputRequired(uint256 expected, uint256 received);
 
     event PoolFunded(address indexed funder, uint256 requested, uint256 received);
-    event Redeemed(
+    event BurnedAndClaimed(
         address indexed account,
         uint256 burnedAmount,
         uint256 limitedAmount,
-        uint256 indexed redemptionNumber
+        uint256 indexed exchangeNumber
     );
     event UnusedLimitedTokensWithdrawn(address indexed recipient, uint256 amount);
 
@@ -62,13 +62,13 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
         limitedToken = IERC20(limitedToken_);
     }
 
-    /// @notice Returns the limited tokens currently available for redemption.
+    /// @notice Returns the limited tokens currently available for exchanges.
     function reserve() public view returns (uint256) {
         return limitedToken.balanceOf(address(this));
     }
 
     /// @notice Pulls limited tokens into the pool and reports the actual amount received.
-    /// @dev The owner can also transfer limited tokens directly to this vault.
+    /// @dev The owner can also transfer limited tokens directly to this contract.
     function fund(uint256 amount) external onlyOwner nonReentrant returns (uint256 received) {
         if (amount == 0) revert ZeroAmount();
 
@@ -79,10 +79,10 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
         emit PoolFunded(msg.sender, amount, received);
     }
 
-    /// @notice Burns `amount` from the caller and transfers the same amount of limited tokens.
-    /// @dev These TokenTax originals burn transfers sent to BURN_SINK. Measuring totalSupply
-    /// before and after makes the transaction revert unless the exact requested amount was burned.
-    function redeem(uint256 amount) external nonReentrant whenNotPaused {
+    /// @notice Burns `amount` from the caller and sends the same amount of limited tokens.
+    /// @dev The supported originals burn transfers sent to BURN_SINK. Measuring totalSupply
+    /// before and after makes the transaction revert unless the exact amount was burned.
+    function burnAndClaim(uint256 amount) external nonReentrant whenNotPaused {
         if (amount == 0) revert ZeroAmount();
 
         uint256 available = reserve();
@@ -103,14 +103,14 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
 
         totalBurned += burned;
         totalLimitedDistributed += amount;
-        redemptionCount += 1;
+        exchangeCount += 1;
         accountBurned[msg.sender] += burned;
-        if (!hasRedeemed[msg.sender]) {
-            hasRedeemed[msg.sender] = true;
-            uniqueRedeemers += 1;
+        if (!hasExchanged[msg.sender]) {
+            hasExchanged[msg.sender] = true;
+            uniqueExchangers += 1;
         }
 
-        emit Redeemed(msg.sender, burned, amount, redemptionCount);
+        emit BurnedAndClaimed(msg.sender, burned, amount, exchangeCount);
     }
 
     function pause() external onlyOwner {
@@ -121,7 +121,7 @@ abstract contract TokenRedemptionVault is Ownable, Pausable, ReentrancyGuard {
         _unpause();
     }
 
-    /// @notice Allows recovery of unused inventory only while redemptions are paused.
+    /// @notice Allows recovery of unused inventory only while exchanges are paused.
     function withdrawUnusedLimitedTokens(address recipient, uint256 amount)
         external
         onlyOwner

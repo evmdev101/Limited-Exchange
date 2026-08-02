@@ -5,28 +5,28 @@
   "burnSink": "0x000000000000000000000000000000000000dEaD",
   "pools": {
     "cashx": {
-      "contract": "CashXRedemptionVault",
+      "contract": "CashXBurnExchange",
       "originalToken": "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665",
       "limitedToken": null,
-      "vault": null
+      "burnExchange": null
     },
     "distrox": {
-      "contract": "DistroXRedemptionVault",
+      "contract": "DistroXBurnExchange",
       "originalToken": "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03",
       "limitedToken": null,
-      "vault": null
+      "burnExchange": null
     },
     "divx": {
-      "contract": "DivXRedemptionVault",
+      "contract": "DivXBurnExchange",
       "originalToken": "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3",
       "limitedToken": null,
-      "vault": null
+      "burnExchange": null
     },
     "gsx": {
-      "contract": "GSXRedemptionVault",
+      "contract": "GSXBurnExchange",
       "originalToken": "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e",
       "limitedToken": null,
-      "vault": null
+      "burnExchange": null
     }
   }
 }

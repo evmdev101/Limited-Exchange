@@ -317,7 +317,7 @@ body.bg-pattern-synapse {
 .receive-panel strong { width: 100%; font-size: 31px; }
 .pool-meta { display: flex; justify-content: space-between; margin: 20px 2px; color: var(--muted); font-size: 12px; }
 .pool-meta strong { color: var(--fg); }
-.redeem-button, .admin-panel button {
+.exchange-button, .admin-panel button {
   width: 100%;
   border: 1px solid var(--red);
   border-radius: 10px;
@@ -328,7 +328,7 @@ body.bg-pattern-synapse {
   font-weight: 850;
   box-shadow: 0 10px 28px color-mix(in srgb, var(--red) 18%, transparent);
 }
-.redeem-button:disabled, .admin-panel button:disabled { cursor: wait; opacity: .65; }
+.exchange-button:disabled, .admin-panel button:disabled { cursor: wait; opacity: .65; }
 .status-line { min-height: 18px; margin: 13px 0 0; text-align: center; color: color-mix(in srgb, var(--fg) 52%, transparent); font-size: 11px; }
 
 .side-panel { display: flex; flex-direction: column; gap: 14px; }

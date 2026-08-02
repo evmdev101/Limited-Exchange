@@ -14,7 +14,7 @@ async function render() {
   );
 }
 
-test("server-renders the Limited Exchange redemption interface", async () => {
+test("server-renders the Limited Exchange burn interface", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
@@ -28,28 +28,28 @@ test("server-renders the Limited Exchange redemption interface", async () => {
   assert.match(html, /LDistroX/);
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
-  assert.match(html, /1:1 token redemption on PulseChain/);
+  assert.match(html, /1:1 burn exchange on PulseChain/);
   assert.match(html, /> Theme</);
   assert.match(html, /role="status"/);
   assert.match(html, /property="og:image"/);
   assert.doesNotMatch(html, /Your site is taking shape|codex-preview/);
 });
 
-test("ships the source-matched theme and atomic redemption contract", async () => {
-  const [page, themePicker, themeEffects, layout, styles, packageJson, vault, poolVaults, deploymentConfig, compiler] = await Promise.all([
+test("ships the source-matched theme and atomic burn exchange contracts", async () => {
+  const [page, themePicker, themeEffects, layout, styles, packageJson, core, burnExchanges, deploymentConfig, compiler] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ThemePicker.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/themeEffects.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readFile(new URL("../contracts/src/TokenRedemptionVault.sol", import.meta.url), "utf8"),
-    readFile(new URL("../contracts/src/PoolRedemptionVaults.sol", import.meta.url), "utf8"),
+    readFile(new URL("../contracts/src/BurnExchangeCore.sol", import.meta.url), "utf8"),
+    readFile(new URL("../contracts/src/BurnExchanges.sol", import.meta.url), "utf8"),
     readFile(new URL("../contracts/deployment/pulsechain-pools.json", import.meta.url), "utf8"),
     readFile(new URL("../scripts/compile-contracts.mjs", import.meta.url), "utf8"),
   ]);
 
-  assert.match(page, /function redeem\(\)/);
+  assert.match(page, /function burnAndClaim\(\)/);
   assert.match(page, /function fundPool\(\)/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
@@ -95,35 +95,36 @@ test("ships the source-matched theme and atomic redemption contract", async () =
   assert.match(styles, /--border:\s*#355a66/);
   assert.match(styles, /--red:\s*#e06c75/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
-  assert.match(vault, /BURN_SINK/);
-  assert.match(vault, /abstract contract TokenRedemptionVault/);
-  assert.match(vault, /safeTransferFrom\(msg\.sender, BURN_SINK, amount\)/);
-  assert.match(vault, /supplyBefore - supplyAfter/);
-  assert.match(vault, /ExactBurnRequired/);
-  assert.match(vault, /limitedToken\.safeTransfer\(msg\.sender, amount\)/);
-  assert.match(vault, /ExactOutputRequired/);
-  assert.match(vault, /uint256 public totalBurned/);
-  assert.match(vault, /uint256 public totalLimitedDistributed/);
-  assert.match(vault, /uint256 public redemptionCount/);
-  assert.match(vault, /uint256 public uniqueRedeemers/);
-  assert.match(vault, /function fund\(uint256 amount\) external onlyOwner/);
-  assert.match(poolVaults, /contract CashXRedemptionVault is TokenRedemptionVault/);
-  assert.match(poolVaults, /contract DistroXRedemptionVault is TokenRedemptionVault/);
-  assert.match(poolVaults, /contract DivXRedemptionVault is TokenRedemptionVault/);
-  assert.match(poolVaults, /contract GSXRedemptionVault is TokenRedemptionVault/);
-  assert.match(poolVaults, /TokenRedemptionVault\(ORIGINAL_TOKEN, limitedToken_, initialOwner\)/);
+  assert.match(core, /BURN_SINK/);
+  assert.match(core, /abstract contract BurnExchangeCore/);
+  assert.match(core, /safeTransferFrom\(msg\.sender, BURN_SINK, amount\)/);
+  assert.match(core, /supplyBefore - supplyAfter/);
+  assert.match(core, /ExactBurnRequired/);
+  assert.match(core, /limitedToken\.safeTransfer\(msg\.sender, amount\)/);
+  assert.match(core, /ExactOutputRequired/);
+  assert.match(core, /uint256 public totalBurned/);
+  assert.match(core, /uint256 public totalLimitedDistributed/);
+  assert.match(core, /uint256 public exchangeCount/);
+  assert.match(core, /uint256 public uniqueExchangers/);
+  assert.match(core, /function fund\(uint256 amount\) external onlyOwner/);
+  assert.match(core, /function burnAndClaim\(uint256 amount\)/);
+  assert.match(burnExchanges, /contract CashXBurnExchange is BurnExchangeCore/);
+  assert.match(burnExchanges, /contract DistroXBurnExchange is BurnExchangeCore/);
+  assert.match(burnExchanges, /contract DivXBurnExchange is BurnExchangeCore/);
+  assert.match(burnExchanges, /contract GSXBurnExchange is BurnExchangeCore/);
+  assert.match(burnExchanges, /BurnExchangeCore\(ORIGINAL_TOKEN, limitedToken_, initialOwner\)/);
   assert.match(deploymentConfig, /"limitedToken": null/);
-  assert.match(deploymentConfig, /"vault": null/);
-  assert.match(compiler, /CashXRedemptionVault/);
-  assert.match(compiler, /GSXRedemptionVault/);
+  assert.match(deploymentConfig, /"burnExchange": null/);
+  assert.match(compiler, /CashXBurnExchange/);
+  assert.match(compiler, /GSXBurnExchange/);
 });
 
 test("compiles four deployable pool artifacts with the required constructor inputs", async () => {
   const contractNames = [
-    "CashXRedemptionVault",
-    "DistroXRedemptionVault",
-    "DivXRedemptionVault",
-    "GSXRedemptionVault",
+    "CashXBurnExchange",
+    "DistroXBurnExchange",
+    "DivXBurnExchange",
+    "GSXBurnExchange",
   ];
 
   for (const contractName of contractNames) {
@@ -141,7 +142,7 @@ test("compiles four deployable pool artifacts with the required constructor inpu
       constructor.inputs.map((input) => [input.name, input.type]),
       [["limitedToken_", "address"], ["initialOwner", "address"]],
     );
-    for (const requiredFunction of ["redeem", "fund", "pause", "unpause", "reserve", "totalBurned"]) {
+    for (const requiredFunction of ["burnAndClaim", "fund", "pause", "unpause", "reserve", "totalBurned"]) {
       assert.equal(functions.has(requiredFunction), true, `${contractName} is missing ${requiredFunction}`);
     }
   }

@@ -57,10 +57,10 @@ const erc20Abi = [
   },
 ] as const;
 
-const vaultAbi = [
+const burnExchangeAbi = [
   {
     type: "function",
-    name: "redeem",
+    name: "burnAndClaim",
     stateMutability: "nonpayable",
     inputs: [{ name: "amount", type: "uint256" }],
     outputs: [],
@@ -95,14 +95,14 @@ const vaultAbi = [
   },
   {
     type: "function",
-    name: "redemptionCount",
+    name: "exchangeCount",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
   },
   {
     type: "function",
-    name: "uniqueRedeemers",
+    name: "uniqueExchangers",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
@@ -117,29 +117,29 @@ type Pair = {
   decimals: number;
   burnAddress: Address;
   receiveAddress: Address;
-  vaultAddress: Address;
+  exchangeAddress: Address;
 };
 
 type PoolStats = {
   totalBurned: bigint;
   totalDistributed: bigint;
-  redemptions: bigint;
-  uniqueRedeemers: bigint;
+  exchanges: bigint;
+  uniqueExchangers: bigint;
 };
 
 const emptyStats: PoolStats = {
   totalBurned: 0n,
   totalDistributed: 0n,
-  redemptions: 0n,
-  uniqueRedeemers: 0n,
+  exchanges: 0n,
+  uniqueExchangers: 0n,
 };
 
-// Original PulseChain token addresses are confirmed. Add each limited token and vault after deployment.
+// Original PulseChain token addresses are confirmed. Add each limited token and burn exchange after deployment.
 const pairs: Pair[] = [
-  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
-  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, vaultAddress: zeroAddress },
+  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
 ];
 
 declare global {
@@ -162,7 +162,7 @@ export default function Home() {
   const [amount, setAmount] = useState("");
   const [reserve, setReserve] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
-  const [status, setStatus] = useState("Ready to redeem");
+  const [status, setStatus] = useState("Ready to burn and claim");
   const [busy, setBusy] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
@@ -174,7 +174,7 @@ export default function Home() {
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
     [activeKey],
   );
-  const configured = pair.vaultAddress !== zeroAddress;
+  const configured = pair.exchangeAddress !== zeroAddress;
 
   async function copyAddress(address: Address) {
     try {
@@ -240,18 +240,18 @@ export default function Home() {
           return;
         }
 
-        const [nextReserve, totalBurned, totalDistributed, redemptions, uniqueRedeemers, nextBalance] = await Promise.all([
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "reserve" }),
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "totalBurned" }),
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "totalLimitedDistributed" }),
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "redemptionCount" }),
-          publicClient.readContract({ address: pair.vaultAddress, abi: vaultAbi, functionName: "uniqueRedeemers" }),
+        const [nextReserve, totalBurned, totalDistributed, exchanges, uniqueExchangers, nextBalance] = await Promise.all([
+          publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "reserve" }),
+          publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalBurned" }),
+          publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalLimitedDistributed" }),
+          publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "exchangeCount" }),
+          publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "uniqueExchangers" }),
           balancePromise,
         ]);
         if (!cancelled) {
           setReserve(nextReserve);
           setBalance(nextBalance);
-          setStats({ totalBurned, totalDistributed, redemptions, uniqueRedeemers });
+          setStats({ totalBurned, totalDistributed, exchanges, uniqueExchangers });
         }
       } catch {
         if (!cancelled) setStatus("Unable to read this pool right now.");
@@ -266,7 +266,7 @@ export default function Home() {
     return createWalletClient({ account, chain: pulsechain, transport: custom(window.ethereum) });
   }
 
-  async function redeem() {
+  async function burnAndClaim() {
     if (!account) return connectWallet();
     if (!configured) {
       setStatus("This pool will activate after its verified addresses are added.");
@@ -283,7 +283,7 @@ export default function Home() {
         address: pair.burnAddress,
         abi: erc20Abi,
         functionName: "allowance",
-        args: [account, pair.vaultAddress],
+        args: [account, pair.exchangeAddress],
       });
 
       if (allowance < value) {
@@ -292,16 +292,16 @@ export default function Home() {
           address: pair.burnAddress,
           abi: erc20Abi,
           functionName: "approve",
-          args: [pair.vaultAddress, value],
+          args: [pair.exchangeAddress, value],
         });
         await publicClient.waitForTransactionReceipt({ hash: approvalHash });
       }
 
-      setStatus(`Confirm the 1:1 ${pair.burn} redemption`);
+      setStatus(`Confirm the 1:1 ${pair.burn} burn and claim`);
       const hash = await wallet.writeContract({
-        address: pair.vaultAddress,
-        abi: vaultAbi,
-        functionName: "redeem",
+        address: pair.exchangeAddress,
+        abi: burnExchangeAbi,
+        functionName: "burnAndClaim",
         args: [value],
       });
       await publicClient.waitForTransactionReceipt({ hash });
@@ -327,18 +327,18 @@ export default function Home() {
       const value = parseUnits(fundAmount, pair.decimals);
       if (value <= 0n) throw new Error("Enter a refill amount");
       const wallet = await getWallet();
-      setStatus(`Approve ${pair.receive} for the vault`);
+      setStatus(`Approve ${pair.receive} for the burn exchange`);
       const approvalHash = await wallet.writeContract({
         address: pair.receiveAddress,
         abi: erc20Abi,
         functionName: "approve",
-        args: [pair.vaultAddress, value],
+        args: [pair.exchangeAddress, value],
       });
       await publicClient.waitForTransactionReceipt({ hash: approvalHash });
       setStatus("Confirm the pool refill");
       const fundHash = await wallet.writeContract({
-        address: pair.vaultAddress,
-        abi: vaultAbi,
+        address: pair.exchangeAddress,
+        abi: burnExchangeAbi,
         functionName: "fund",
         args: [value],
       });
@@ -370,9 +370,9 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div className="eyebrow"><span /> 1:1 token redemption on PulseChain</div>
+        <div className="eyebrow"><span /> 1:1 burn exchange on PulseChain</div>
         <h1>Burn the original.<br /><em>Claim the limited.</em></h1>
-        <p>Exchange supported tokens for their limited counterparts. Every redemption is transparent, atomic, and fixed at a 1:1 rate.</p>
+        <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
         <div className="trust-row">
           <span>◈ Verifiable on-chain</span>
           <span>◎ Separate reserves</span>
@@ -381,14 +381,14 @@ export default function Home() {
       </section>
 
       <section className="exchange-section" id="pools">
-        <div className="pool-tabs" role="tablist" aria-label="Redemption pools">
+        <div className="pool-tabs" role="tablist" aria-label="Burn exchange pools">
           {pairs.map((item) => (
             <button
               key={item.key}
               role="tab"
               aria-selected={item.key === activeKey}
               className={item.key === activeKey ? "active" : ""}
-              onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Ready to redeem"); }}
+              onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Ready to burn and claim"); }}
             >
               <small>{item.burn}</small>
               <strong>{item.receive}</strong>
@@ -410,7 +410,7 @@ export default function Home() {
               <div>
                 <input
                   inputMode="decimal"
-                  aria-label={`${pair.burn} amount to redeem`}
+                  aria-label={`${pair.burn} amount to burn and exchange`}
                   placeholder="0.00"
                   value={amount}
                   onChange={(event) => setAmount(event.target.value.replace(/[^0-9.]/g, ""))}
@@ -450,7 +450,7 @@ export default function Home() {
               <strong>{configured ? formatAmount(reserve, pair.decimals) : "Pending"} {pair.receive}</strong>
             </div>
 
-            <button className="redeem-button" type="button" onClick={redeem} disabled={busy}>
+            <button className="exchange-button" type="button" onClick={burnAndClaim} disabled={busy}>
               {busy ? "Waiting for confirmation…" : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
             </button>
             <p className="status-line" role="status">{status}</p>
@@ -461,11 +461,11 @@ export default function Home() {
               <span className="card-kicker">POOL STATUS</span>
               <h3>{pair.label}</h3>
               <div className="orb"><span>1:1</span><small>FIXED RATE</small></div>
-              <div className="pool-stats" aria-label={`${pair.burn} redemption statistics`}>
+              <div className="pool-stats" aria-label={`${pair.burn} burn exchange statistics`}>
                 <div><span>Total burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
                 <div><span>{pair.receive} distributed</span><strong>{configured ? formatAmount(stats.totalDistributed, pair.decimals) : "Pending"}</strong></div>
-                <div><span>Redemptions</span><strong>{configured ? stats.redemptions.toLocaleString() : "—"}</strong></div>
-                <div><span>Unique wallets</span><strong>{configured ? stats.uniqueRedeemers.toLocaleString() : "—"}</strong></div>
+                <div><span>Exchanges</span><strong>{configured ? stats.exchanges.toLocaleString() : "—"}</strong></div>
+                <div><span>Unique wallets</span><strong>{configured ? stats.uniqueExchangers.toLocaleString() : "—"}</strong></div>
               </div>
               <dl>
                 <div><dt>Network</dt><dd>PulseChain</dd></div>
@@ -509,7 +509,7 @@ export default function Home() {
         <div>
           <span className="section-number">02</span>
           <h3>Approve & burn</h3>
-          <p>Your wallet approves the amount, then the vault permanently burns it.</p>
+          <p>Your wallet approves the amount, then the burn exchange permanently burns it.</p>
         </div>
         <div>
           <span className="section-number">03</span>
