@@ -9,7 +9,8 @@
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "vinext start",
-    "test": "node scripts/compile-contracts.mjs && vinext build && node --test tests/rendered-html.test.mjs",
+    "test": "hardhat test solidity && node scripts/compile-contracts.mjs && vinext build && node --test tests/rendered-html.test.mjs",
+    "test:contracts": "hardhat test solidity",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate",
     "contracts:compile": "node scripts/compile-contracts.mjs"
@@ -33,6 +34,7 @@
     "drizzle-kit": "0.31.10",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
+    "hardhat": "^3.12.0",
     "react-server-dom-webpack": "19.2.6",
     "solc": "^0.8.36",
     "tailwindcss": "4.2.1",

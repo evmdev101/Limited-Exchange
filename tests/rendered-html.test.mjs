@@ -29,6 +29,9 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
   assert.match(html, /1:1 burn exchange on PulseChain/);
+  assert.match(html, /Local contract tests passed/);
+  assert.match(html, /Awaiting LCashX contract/);
+  assert.doesNotMatch(html, /Owner pool management|Owner refill console/);
   assert.match(html, /> Theme</);
   assert.match(html, /role="status"/);
   assert.match(html, /property="og:image"/);
@@ -63,6 +66,10 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /Copy.*contract address/);
   assert.match(page, /Address pending/);
   assert.match(page, /Limited contract/);
+  assert.match(page, /Burn exchange code/);
+  assert.match(page, /Local tests passed/);
+  assert.match(page, /busy \|\| !configured/);
+  assert.match(page, /\{configured && \(/);
   assert.match(page, /<ThemePicker \/>/);
   assert.match(themePicker, /#282c34.*#9cdef2.*#111111.*#355a66.*#e06c75/);
   assert.match(themePicker, /Apply Custom Theme/);

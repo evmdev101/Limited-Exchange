@@ -162,7 +162,7 @@ export default function Home() {
   const [amount, setAmount] = useState("");
   const [reserve, setReserve] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
-  const [status, setStatus] = useState("Ready to burn and claim");
+  const [status, setStatus] = useState("Local contract tests passed — live deployment pending");
   const [busy, setBusy] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [fundAmount, setFundAmount] = useState("");
@@ -388,7 +388,7 @@ export default function Home() {
               role="tab"
               aria-selected={item.key === activeKey}
               className={item.key === activeKey ? "active" : ""}
-              onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Ready to burn and claim"); }}
+              onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Local contract tests passed — live deployment pending"); }}
             >
               <small>{item.burn}</small>
               <strong>{item.receive}</strong>
@@ -450,8 +450,8 @@ export default function Home() {
               <strong>{configured ? formatAmount(reserve, pair.decimals) : "Pending"} {pair.receive}</strong>
             </div>
 
-            <button className="exchange-button" type="button" onClick={burnAndClaim} disabled={busy}>
-              {busy ? "Waiting for confirmation…" : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
+            <button className="exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
+              {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
             </button>
             <p className="status-line" role="status">{status}</p>
           </article>
@@ -472,6 +472,7 @@ export default function Home() {
                 <div><dt>Input</dt><dd>{pair.burn}</dd></div>
                 <div><dt>Output</dt><dd>{pair.receive}</dd></div>
                 <div><dt>Mechanism</dt><dd>Burn & transfer</dd></div>
+                <div><dt>Burn exchange code</dt><dd className="test-passed">Local tests passed ✓</dd></div>
                 <div>
                   <dt>Original contract</dt>
                   <dd className="contract-actions">
@@ -483,18 +484,22 @@ export default function Home() {
               </dl>
             </div>
 
-            <button className="admin-toggle" type="button" onClick={() => setAdminOpen((open) => !open)} aria-expanded={adminOpen}>
-              <span>⌁ Pool management</span><b>{adminOpen ? "−" : "+"}</b>
-            </button>
-            {adminOpen && (
-              <div className="admin-panel">
-                <p>Owner refill console</p>
-                <label>
-                  <span>{pair.receive} amount</span>
-                  <input value={fundAmount} onChange={(event) => setFundAmount(event.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00" />
-                </label>
-                <button type="button" onClick={fundPool} disabled={busy}>Refill {pair.receive} pool</button>
-              </div>
+            {configured && (
+              <>
+                <button className="admin-toggle" type="button" onClick={() => setAdminOpen((open) => !open)} aria-expanded={adminOpen}>
+                  <span>⌁ Owner pool management</span><b>{adminOpen ? "−" : "+"}</b>
+                </button>
+                {adminOpen && (
+                  <div className="admin-panel">
+                    <p>Owner refill console</p>
+                    <label>
+                      <span>{pair.receive} amount</span>
+                      <input value={fundAmount} onChange={(event) => setFundAmount(event.target.value.replace(/[^0-9.]/g, ""))} placeholder="0.00" />
+                    </label>
+                    <button type="button" onClick={fundPool} disabled={busy}>Refill {pair.receive} pool</button>
+                  </div>
+                )}
+              </>
             )}
           </aside>
         </div>

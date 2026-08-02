@@ -15,6 +15,12 @@ Each burn exchange sends the user's original token through the TokenTax template
 
 Each contract exposes on-chain statistics for `totalBurned`, `totalLimitedDistributed`, `exchangeCount`, `uniqueExchangers`, and each wallet's cumulative burned amount.
 
+## Local contract tests
+
+The complete flow can be tested before the real limited tokens exist. `test/BurnExchange.t.sol` deploys temporary fixed-supply mock tokens and a test-only burn exchange on Hardhat's local simulated EVM. These mock contracts are never used on PulseChain.
+
+Run `pnpm test:contracts` to verify exact 1:1 exchange, real supply reduction, reserve accounting, per-wallet and pool statistics, owner-only funding, insufficient reserves, pausing, fixed limited supply, decimal matching, rejection of non-burning inputs, and rejection of taxed outputs. These tests validate our burn-exchange code; a small live test with every final Nexion limited token is still required before launch.
+
 ## Constructor inputs
 
 Each named burn exchange takes only two deployment inputs:

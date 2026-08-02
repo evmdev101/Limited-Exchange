@@ -330,6 +330,7 @@ body.bg-pattern-synapse {
 }
 .exchange-button:disabled, .admin-panel button:disabled { cursor: wait; opacity: .65; }
 .status-line { min-height: 18px; margin: 13px 0 0; text-align: center; color: color-mix(in srgb, var(--fg) 52%, transparent); font-size: 11px; }
+.test-passed { color: color-mix(in srgb, var(--fg) 78%, #58d68d); }
 
 .side-panel { display: flex; flex-direction: column; gap: 14px; }
 .supply-card { height: 100%; padding: 28px; }

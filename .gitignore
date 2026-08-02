@@ -12,6 +12,7 @@
 
 # testing
 /coverage
+/.hardhat/
 
 # next.js
 /.next/
