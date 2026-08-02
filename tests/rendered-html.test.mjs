@@ -30,6 +30,10 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /LGSX/);
   assert.match(html, /1:1 burn exchange on PulseChain/);
   assert.match(html, /class="nav-tab active"[^>]*aria-current="page"[^>]*>Burn Exchange</);
+  assert.match(html, /aria-label="Telegram"/);
+  assert.match(html, /aria-label="X"/);
+  assert.match(html, /aria-label="DexScreener"/);
+  assert.match(html, /aria-label="YouTube"/);
   assert.match(html, /Local contract tests passed/);
   assert.match(html, /Awaiting LCashX contract/);
   assert.doesNotMatch(html, /Owner pool management|Owner refill console/);
@@ -110,6 +114,8 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(styles, /\.topbar\s*\{[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/);
   assert.match(styles, /\.nav-tab\s*\{/);
   assert.match(styles, /\.nav-actions\s*\{/);
+  assert.match(styles, /\.topbar\s*\{[\s\S]*position:\s*sticky[\s\S]*top:\s*0/);
+  assert.match(styles, /\.social-icon\s*\{/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(core, /BURN_SINK/);
   assert.match(core, /abstract contract BurnExchangeCore/);
