@@ -176,11 +176,11 @@ export default function Home() {
   );
   const configured = pair.exchangeAddress !== zeroAddress;
 
-  async function copyAddress(address: Address) {
+  async function copyAddress(address: Address, label: string) {
     try {
       await navigator.clipboard.writeText(address);
       setCopiedAddress(address);
-      setStatus(`${pair.burn} contract address copied`);
+      setStatus(`${label} contract address copied`);
       window.setTimeout(() => setCopiedAddress(null), 1800);
     } catch {
       setStatus("Unable to copy the address. Please copy it from the explorer.");
@@ -423,7 +423,7 @@ export default function Home() {
                     type="button"
                     title={pair.burnAddress}
                     aria-label={`Copy ${pair.burn} contract address`}
-                    onClick={() => copyAddress(pair.burnAddress)}
+                    onClick={() => copyAddress(pair.burnAddress, pair.burn)}
                   >
                     <span>{shortAddress(pair.burnAddress)}</span>
                     <span aria-hidden="true">{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</span>
@@ -477,10 +477,31 @@ export default function Home() {
                   <dt>Original contract</dt>
                   <dd className="contract-actions">
                     <a href={`https://scan.pulsechain.com/address/${pair.burnAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.burnAddress)} ↗</a>
-                    <button type="button" title={`Copy ${pair.burn} address`} aria-label={`Copy ${pair.burn} contract address`} onClick={() => copyAddress(pair.burnAddress)}>{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</button>
+                    <button type="button" title={`Copy ${pair.burn} address`} aria-label={`Copy ${pair.burn} contract address`} onClick={() => copyAddress(pair.burnAddress, pair.burn)}>{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</button>
                   </dd>
                 </div>
-                <div><dt>Limited contract</dt><dd className="address-pending">Pending</dd></div>
+                <div>
+                  <dt>Limited token contract</dt>
+                  {pair.receiveAddress === zeroAddress ? (
+                    <dd className="address-pending">Pending</dd>
+                  ) : (
+                    <dd className="contract-actions">
+                      <a href={`https://scan.pulsechain.com/address/${pair.receiveAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.receiveAddress)} ↗</a>
+                      <button type="button" title={`Copy ${pair.receive} address`} aria-label={`Copy ${pair.receive} contract address`} onClick={() => copyAddress(pair.receiveAddress, pair.receive)}>{copiedAddress === pair.receiveAddress ? "✓" : "⧉"}</button>
+                    </dd>
+                  )}
+                </div>
+                <div>
+                  <dt>Burn exchange contract</dt>
+                  {pair.exchangeAddress === zeroAddress ? (
+                    <dd className="address-pending">Pending</dd>
+                  ) : (
+                    <dd className="contract-actions">
+                      <a href={`https://scan.pulsechain.com/address/${pair.exchangeAddress}`} target="_blank" rel="noreferrer">{shortAddress(pair.exchangeAddress)} ↗</a>
+                      <button type="button" title={`Copy ${pair.burn} burn exchange address`} aria-label={`Copy ${pair.burn} burn exchange contract address`} onClick={() => copyAddress(pair.exchangeAddress, `${pair.burn} burn exchange`)}>{copiedAddress === pair.exchangeAddress ? "✓" : "⧉"}</button>
+                    </dd>
+                  )}
+                </div>
               </dl>
             </div>
 

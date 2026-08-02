@@ -65,7 +65,10 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /navigator\.clipboard\.writeText\(address\)/);
   assert.match(page, /Copy.*contract address/);
   assert.match(page, /Address pending/);
-  assert.match(page, /Limited contract/);
+  assert.match(page, /Limited token contract/);
+  assert.match(page, /Burn exchange contract/);
+  assert.match(page, /copyAddress\(pair\.receiveAddress, pair\.receive\)/);
+  assert.match(page, /copyAddress\(pair\.exchangeAddress, `\$\{pair\.burn\} burn exchange`\)/);
   assert.match(page, /Burn exchange code/);
   assert.match(page, /Local tests passed/);
   assert.match(page, /busy \|\| !configured/);
