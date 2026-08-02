@@ -16,6 +16,14 @@ export default defineConfig({
         enabled: true,
         runs: 200,
       },
+      evmVersion: "paris",
+    },
+  },
+  networks: {
+    hardhatMainnet: {
+      type: "edr-simulated",
+      chainType: "l1",
+      hardfork: "merge",
     },
   },
 });

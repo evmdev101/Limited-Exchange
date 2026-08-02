@@ -39,7 +39,7 @@ test("server-renders the Limited Exchange burn interface", async () => {
 });
 
 test("ships the source-matched theme and atomic burn exchange contracts", async () => {
-  const [page, themePicker, themeEffects, layout, styles, packageJson, core, burnExchanges, deploymentConfig, compiler] = await Promise.all([
+  const [page, themePicker, themeEffects, layout, styles, packageJson, core, burnExchanges, deploymentConfig, compiler, hardhatConfig, remixGuide] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/ThemePicker.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/themeEffects.ts", import.meta.url), "utf8"),
@@ -50,6 +50,8 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
     readFile(new URL("../contracts/src/BurnExchanges.sol", import.meta.url), "utf8"),
     readFile(new URL("../contracts/deployment/pulsechain-pools.json", import.meta.url), "utf8"),
     readFile(new URL("../scripts/compile-contracts.mjs", import.meta.url), "utf8"),
+    readFile(new URL("../hardhat.config.ts", import.meta.url), "utf8"),
+    readFile(new URL("../contracts/REMIX-DEPLOYMENT.md", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /function burnAndClaim\(\)/);
@@ -127,6 +129,13 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(deploymentConfig, /"burnExchange": null/);
   assert.match(compiler, /CashXBurnExchange/);
   assert.match(compiler, /GSXBurnExchange/);
+  assert.match(compiler, /evmVersion: "paris"/);
+  assert.match(hardhatConfig, /evmVersion: "paris"/);
+  assert.match(hardhatConfig, /hardfork: "merge"/);
+  assert.match(remixGuide, /0\.8\.36\+commit\.8a079791/);
+  assert.match(remixGuide, /EVM version: `paris`/);
+  assert.match(remixGuide, /Optimization runs: `200`/);
+  assert.match(remixGuide, /Chain ID: `369`/);
 });
 
 test("compiles four deployable pool artifacts with the required constructor inputs", async () => {
@@ -147,6 +156,9 @@ test("compiles four deployable pool artifacts with the required constructor inpu
     );
 
     assert.equal(artifact.contractName, contractName);
+    assert.match(artifact.compiler.version, /^0\.8\.36\+commit\.8a079791/);
+    assert.equal(artifact.compiler.evmVersion, "paris");
+    assert.deepEqual(artifact.compiler.optimizer, { enabled: true, runs: 200 });
     assert.match(artifact.bytecode, /^0x[0-9a-f]{100,}$/i);
     assert.deepEqual(
       constructor.inputs.map((input) => [input.name, input.type]),

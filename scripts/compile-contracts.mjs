@@ -25,6 +25,7 @@ const input = {
   sources,
   settings: {
     optimizer: { enabled: true, runs: 200 },
+    evmVersion: "paris",
     outputSelection: { "*": { "*": ["abi", "evm.bytecode.object"] } },
   },
 };
@@ -57,6 +58,11 @@ for (const contractName of productionContracts) {
       {
         contractName,
         sourceName: "contracts/src/BurnExchanges.sol",
+        compiler: {
+          version: solc.version(),
+          evmVersion: input.settings.evmVersion,
+          optimizer: input.settings.optimizer,
+        },
         abi: contract.abi,
         bytecode: `0x${contract.evm.bytecode.object}`,
       },

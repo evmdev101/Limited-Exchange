@@ -41,7 +41,7 @@ The constructor checks that the original and limited tokens use the same decimal
 ## Deployment order
 
 1. Receive and verify the four limited-token addresses plus the owner wallet.
-2. Compile `BurnExchanges.sol` with Solidity `0.8.24` or newer and optimizer settings of 200 runs.
+2. Compile `BurnExchanges.sol` with Solidity `0.8.36`, EVM version `paris`, optimizer enabled with 200 runs, and `viaIR` disabled. Do not use Cancun or the compiler default.
 3. Select the matching named burn exchange in Remix and deploy it with the limited-token address and owner wallet. Do not deploy the abstract shared core.
 4. Confirm the deployed contract's `burnToken`, `limitedToken`, and `owner` getters before funding it.
 5. Exempt the contract from the relevant limited token's transaction tax when applicable.
@@ -51,3 +51,5 @@ The constructor checks that the original and limited tokens use the same decimal
 9. Fund the pools, test again, have the contracts independently reviewed, then open the exchanges to the community.
 
 The contracts should receive an independent security review before production funds are deposited.
+
+See `REMIX-DEPLOYMENT.md` for the exact Remix settings, constructor inputs, post-deployment checks, and explorer verification settings.
