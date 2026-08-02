@@ -1,47 +1,34 @@
 {
-  "name": "site-creator-vinext-starter",
+  "name": "limited-exchange",
   "version": "0.1.0",
   "private": true,
   "engines": {
     "node": ">=22.13.0"
   },
   "scripts": {
-    "dev": "vinext dev",
-    "build": "vinext build",
-    "start": "vinext start",
-    "test": "hardhat test solidity && node scripts/compile-contracts.mjs && vinext build && node --test tests/rendered-html.test.mjs",
+    "dev": "vite",
+    "build": "vite build",
+    "start": "vite preview",
+    "preview": "vite preview",
+    "test": "hardhat test solidity && node scripts/compile-contracts.mjs && vite build",
     "test:contracts": "hardhat test solidity",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate",
     "contracts:compile": "node scripts/compile-contracts.mjs"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",
-    "drizzle-orm": "0.45.2",
-    "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6",
     "viem": "^2.55.10"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.37.1",
-    "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-react": "6.0.2",
-    "@vitejs/plugin-rsc": "0.5.26",
-    "drizzle-kit": "0.31.10",
-    "eslint": "9.39.4",
-    "eslint-config-next": "16.2.6",
     "hardhat": "^3.12.0",
-    "react-server-dom-webpack": "19.2.6",
     "solc": "^0.8.36",
-    "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vinext": "0.0.50",
-    "vite": "8.0.13",
-    "wrangler": "4.92.0"
+    "vite": "8.0.13"
   },
   "type": "module"
 }

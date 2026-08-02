@@ -1,6 +1,6 @@
-@import "tailwindcss";
-
 :root {
+  --font-geist-sans: "Geist";
+  --font-geist-mono: "Geist Mono";
   /* cashmoney-mint/src/themes.js — original (dark) theme */
   --bg: #282c34;
   --fg: #9cdef2;

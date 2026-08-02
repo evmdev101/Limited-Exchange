@@ -14,10 +14,9 @@
 /coverage
 /.hardhat/
 
-# next.js
-/.next/
+# generated application output
 /.vinext/
-/out/
+/.wrangler/
 
 # misc
 .DS_Store
@@ -32,13 +31,9 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# vercel
+# hosting tools
 .vercel
-
-# typescript
-next-env.d.ts
 /dist/
-/.wrangler/
 /outputs/
 /work/
 /work-dev.log

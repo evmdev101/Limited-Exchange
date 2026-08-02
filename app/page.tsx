@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createPublicClient,
@@ -136,11 +134,14 @@ const emptyStats: PoolStats = {
 };
 
 // Original PulseChain token addresses are confirmed. Add each limited token and burn exchange after deployment.
+const publicAsset = (path: string) =>
+  `${import.meta.env.BASE_URL}${path.replace(/^\/+/, "")}`;
+
 const pairs: Pair[] = [
-  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", logo: "/tokens/cashx.png", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", logo: "/tokens/distrox.jpg", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", logo: "/tokens/divx.png", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", logo: "/tokens/gsx.png", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", logo: publicAsset("tokens/cashx.png"), decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", logo: publicAsset("tokens/distrox.jpg"), decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", logo: publicAsset("tokens/divx.png"), decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", logo: publicAsset("tokens/gsx.png"), decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
 ];
 
 const burnSink: Address = "0x000000000000000000000000000000000000dEaD";
