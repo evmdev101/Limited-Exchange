@@ -185,6 +185,8 @@ export default function Home() {
   const [copiedAddress, setCopiedAddress] = useState<Address | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
+  const [quickSelectorOpen, setQuickSelectorOpen] = useState(false);
+  const quickSelectorRef = useRef<HTMLDivElement>(null);
 
   const pair = useMemo(
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
@@ -196,20 +198,28 @@ export default function Home() {
     setActiveKey(key);
     setAmount("");
     setSelectorOpen(false);
+    setQuickSelectorOpen(false);
     setStatus("Local contract tests passed — live deployment pending");
   }
 
   useEffect(() => {
-    if (!selectorOpen) return;
+    if (!selectorOpen && !quickSelectorOpen) return;
 
     function handlePointerDown(event: PointerEvent) {
-      if (!selectorRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (selectorOpen && !selectorRef.current?.contains(target)) {
         setSelectorOpen(false);
+      }
+      if (quickSelectorOpen && !quickSelectorRef.current?.contains(target)) {
+        setQuickSelectorOpen(false);
       }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") setSelectorOpen(false);
+      if (event.key === "Escape") {
+        setSelectorOpen(false);
+        setQuickSelectorOpen(false);
+      }
     }
 
     document.addEventListener("pointerdown", handlePointerDown);
@@ -218,7 +228,7 @@ export default function Home() {
       document.removeEventListener("pointerdown", handlePointerDown);
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [selectorOpen]);
+  }, [quickSelectorOpen, selectorOpen]);
 
   async function copyAddress(address: Address, label: string) {
     try {
@@ -435,8 +445,97 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <h1>Burn the original<br /><em>Claim the limited</em></h1>
-        <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
+        <div className="hero-copy">
+          <h1>Burn the original<br /><em>Claim the limited</em></h1>
+          <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
+        </div>
+
+        <article className="quick-exchange-card" aria-label="Quick burn exchange">
+          <div className="quick-card-heading">
+            <div>
+              <small>LIMITED EXCHANGE</small>
+              <h2>Quick Burn</h2>
+            </div>
+            <span>1:1</span>
+          </div>
+
+          <div className="quick-field">
+            <div className="quick-field-label">
+              <span>You burn</span>
+              <button type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
+            </div>
+            <div className="quick-field-row">
+              <input
+                inputMode="decimal"
+                aria-label={`Quick ${pair.burn} amount to burn and exchange`}
+                placeholder="0.00"
+                value={formatAmountInput(amount)}
+                onChange={(event) => setAmount(normalizeAmountInput(event.target.value))}
+              />
+              <div className="pair-selector quick-pair-selector" ref={quickSelectorRef}>
+                <button
+                  className="quick-token-trigger"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={quickSelectorOpen}
+                  aria-label={`Choose quick burn token. Current pair ${pair.burn} to ${pair.receive}`}
+                  onClick={() => {
+                    setSelectorOpen(false);
+                    setQuickSelectorOpen((open) => !open);
+                  }}
+                >
+                  <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                  <b>{pair.burn}</b>
+                  <span aria-hidden="true">⌄</span>
+                </button>
+
+                {quickSelectorOpen && (
+                  <div className="pair-selector-menu quick-selector-menu" role="listbox" aria-label="Choose quick burn exchange pair">
+                    <p>Select an original token</p>
+                    {pairs.map((item) => (
+                      <button
+                        key={item.key}
+                        type="button"
+                        role="option"
+                        aria-selected={item.key === activeKey}
+                        onClick={() => selectPair(item.key)}
+                      >
+                        <img className="token-logo" src={item.logo} alt="" aria-hidden="true" />
+                        <span className="selector-token-copy">
+                          <b>{item.burn}</b>
+                          <small>Receives {item.receive}</small>
+                        </span>
+                        {item.key === activeKey && <span className="selector-check" aria-hidden="true">✓</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <small>Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</small>
+          </div>
+
+          <div className="quick-rate" aria-hidden="true"><span>↓</span><small>FIXED 1:1</small></div>
+
+          <div className="quick-field quick-receive-field">
+            <div className="quick-field-label">
+              <span>You receive</span>
+              <small>Paired automatically</small>
+            </div>
+            <div className="quick-field-row">
+              <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
+              <div className="quick-token-locked" aria-label={`${pair.receive} is locked to ${pair.burn}`}>
+                <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                <b>{pair.receive}</b>
+                <small>LOCKED</small>
+              </div>
+            </div>
+          </div>
+
+          <button className="quick-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
+            {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
+          </button>
+        </article>
       </section>
 
       <section className="exchange-section" id="pools">
@@ -483,7 +582,10 @@ export default function Home() {
                       aria-haspopup="listbox"
                       aria-expanded={selectorOpen}
                       aria-label={`Choose burn token. Current pair ${pair.burn} to ${pair.receive}`}
-                      onClick={() => setSelectorOpen((open) => !open)}
+                      onClick={() => {
+                        setQuickSelectorOpen(false);
+                        setSelectorOpen((open) => !open);
+                      }}
                     >
                       <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
                       <span className="selector-token-copy">
