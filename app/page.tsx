@@ -559,16 +559,19 @@ export default function Home() {
 
         <div className="exchange-grid">
           <article className="exchange-card">
-            <div className="card-heading">
-              <div>
-                <h2>{pair.burn} <span>→</span> {pair.receive}</h2>
-              </div>
+            <div className="quick-card-heading">
+              <h2>EXCHANGE</h2>
             </div>
 
-            <div className="amount-panel">
-              <span>You burn</span>
-              <span className="balance">Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</span>
-              <div>
+            <div className="quick-field">
+              <div className="quick-field-label">
+                <span>You burn</span>
+                <div className="quick-field-actions">
+                  <button type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
+                  <small>Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</small>
+                </div>
+              </div>
+              <div className="quick-field-row">
                 <input
                   inputMode="decimal"
                   aria-label={`${pair.burn} amount to burn and exchange`}
@@ -576,90 +579,76 @@ export default function Home() {
                   value={formatAmountInput(amount)}
                   onChange={(event) => setAmount(normalizeAmountInput(event.target.value))}
                 />
-                <button className="max-button" type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
-                <div className="token-identity">
-                  <div className="pair-selector" ref={selectorRef}>
-                    <button
-                      className="pair-selector-trigger"
-                      type="button"
-                      aria-haspopup="listbox"
-                      aria-expanded={selectorOpen}
-                      aria-label={`Choose burn token. Current pair ${pair.burn} to ${pair.receive}`}
-                      onClick={() => {
-                        setQuickSelectorOpen(false);
-                        setSelectorOpen((open) => !open);
-                      }}
-                    >
-                      <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                      <span className="selector-token-copy">
-                        <b>{pair.burn}</b>
-                        <small>Choose token</small>
-                      </span>
-                      <span className="selector-chevron" aria-hidden="true">⌄</span>
-                    </button>
-
-                    {selectorOpen && (
-                      <div className="pair-selector-menu" role="listbox" aria-label="Choose burn exchange pair">
-                        <p>Select an original token</p>
-                        {pairs.map((item) => (
-                          <button
-                            key={item.key}
-                            type="button"
-                            role="option"
-                            aria-selected={item.key === activeKey}
-                            onClick={() => selectPair(item.key)}
-                          >
-                            <img className="token-logo" src={item.logo} alt="" aria-hidden="true" />
-                            <span className="selector-token-copy">
-                              <b>{item.burn}</b>
-                              <small>Receives {item.receive}</small>
-                            </span>
-                            {item.key === activeKey && <span className="selector-check" aria-hidden="true">✓</span>}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                <div className="pair-selector quick-pair-selector" ref={selectorRef}>
                   <button
-                    className="copy-address"
+                    className="quick-token-trigger"
                     type="button"
-                    title={pair.burnAddress}
-                    aria-label={`Copy ${pair.burn} contract address`}
-                    onClick={() => copyAddress(pair.burnAddress, pair.burn)}
+                    aria-haspopup="listbox"
+                    aria-expanded={selectorOpen}
+                    aria-label={`Choose burn token. Current pair ${pair.burn} to ${pair.receive}`}
+                    onClick={() => {
+                      setQuickSelectorOpen(false);
+                      setSelectorOpen((open) => !open);
+                    }}
                   >
-                    <span>{shortAddress(pair.burnAddress)}</span>
-                    <span aria-hidden="true">{copiedAddress === pair.burnAddress ? "✓" : "⧉"}</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="rate-divider"><span>↓</span><p>1 {pair.burn} = 1 {pair.receive}</p></div>
-
-            <div className="receive-panel">
-              <span>You receive</span>
-              <div>
-                <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
-                <div className="token-identity">
-                  <div className="paired-token" aria-label={`${pair.receive} is paired automatically with ${pair.burn}`}>
                     <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                    <span className="selector-token-copy">
-                      <b>{pair.receive}</b>
-                      <small>Paired automatically</small>
+                    <span className="quick-token-copy">
+                      <b>{pair.burn}</b>
+                      <small>PulseChain</small>
                     </span>
-                    <span className="paired-lock" aria-hidden="true">LOCKED</span>
-                  </div>
-                  <span className="address-pending">Address pending</span>
+                    <span className="quick-token-chevron" aria-hidden="true">⌄</span>
+                  </button>
+
+                  {selectorOpen && (
+                    <div className="pair-selector-menu quick-selector-menu" role="listbox" aria-label="Choose burn exchange pair">
+                      <p>Select an original token</p>
+                      {pairs.map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          role="option"
+                          aria-selected={item.key === activeKey}
+                          onClick={() => selectPair(item.key)}
+                        >
+                          <img className="token-logo" src={item.logo} alt="" aria-hidden="true" />
+                          <span className="selector-token-copy">
+                            <b>{item.burn}</b>
+                            <small>Receives {item.receive}</small>
+                          </span>
+                          {item.key === activeKey && <span className="selector-check" aria-hidden="true">✓</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <small>1 {pair.burn} = 1 {pair.receive}</small>
+            </div>
+
+            <div className="quick-rate" aria-hidden="true"><span>↓</span></div>
+
+            <div className="quick-field quick-receive-field">
+              <div className="quick-field-label">
+                <span>You receive</span>
+              </div>
+              <div className="quick-field-row">
+                <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
+                <div className="quick-token-locked" aria-label={`${pair.receive} is paired automatically with ${pair.burn}`}>
+                  <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                  <span className="quick-token-copy">
+                    <b>{pair.receive}</b>
+                    <small>LOCKED 1:1</small>
+                  </span>
                 </div>
               </div>
             </div>
 
-            <div className="pool-meta">
+            <div className="main-exchange-meta">
               <span>Available reserve</span>
               <strong>{configured ? formatAmount(reserve, pair.decimals) : "Pending"} {pair.receive}</strong>
             </div>
 
-            <button className="exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
+            <button className="quick-exchange-button main-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
               {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
             </button>
             <p className="status-line" role="status">{status}</p>

@@ -32,8 +32,7 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
   assert.match(html, /Choose burn token\. Current pair CashX to LCashX/);
-  assert.match(html, /Paired automatically/);
-  assert.match(html, /LOCKED/);
+  assert.match(html, /LOCKED 1:1/);
   assert.doesNotMatch(html, /1:1 burn exchange on PulseChain/);
   assert.doesNotMatch(html, /Verifiable on-chain|Separate reserves|Exact 1:1 output/);
   assert.match(html, /class="nav-tab active"[^>]*aria-current="page"[^>]*>Burn Exchange</);
@@ -72,7 +71,9 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /role="listbox" aria-label="Choose burn exchange pair"/);
   assert.match(page, /role="listbox" aria-label="Choose quick burn exchange pair"/);
   assert.match(page, /className="quick-exchange-button"/);
+  assert.match(page, /className="quick-exchange-button main-exchange-button"/);
   assert.match(page, /className="quick-field-actions"/);
+  assert.match(page, /<article className="exchange-card">[\s\S]*className="quick-field"[\s\S]*className="quick-token-locked"/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
   assert.match(page, /0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665/);
@@ -83,7 +84,6 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /Unique wallets/);
   assert.match(page, /navigator\.clipboard\.writeText\(address\)/);
   assert.match(page, /Copy.*contract address/);
-  assert.match(page, /Address pending/);
   assert.match(page, /Limited token contract/);
   assert.match(page, /Burn exchange contract/);
   assert.match(page, /copyAddress\(pair\.receiveAddress, pair\.receive\)/);
