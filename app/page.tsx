@@ -405,14 +405,8 @@ export default function Home() {
       </header>
 
       <section className="hero" id="top">
-        <div className="eyebrow"><span /> 1:1 burn exchange on PulseChain</div>
         <h1>Burn the original.<br /><em>Claim the limited.</em></h1>
         <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
-        <div className="trust-row">
-          <span>◈ Verifiable on-chain</span>
-          <span>◎ Separate reserves</span>
-          <span>↔ Exact 1:1 output</span>
-        </div>
       </section>
 
       <section className="exchange-section" id="pools">

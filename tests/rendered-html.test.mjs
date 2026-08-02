@@ -28,7 +28,8 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /LDistroX/);
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
-  assert.match(html, /1:1 burn exchange on PulseChain/);
+  assert.doesNotMatch(html, /1:1 burn exchange on PulseChain/);
+  assert.doesNotMatch(html, /Verifiable on-chain|Separate reserves|Exact 1:1 output/);
   assert.match(html, /class="nav-tab active"[^>]*aria-current="page"[^>]*>Burn Exchange</);
   assert.match(html, /aria-label="Telegram"/);
   assert.match(html, /aria-label="X"/);
