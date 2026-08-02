@@ -114,6 +114,7 @@ type Pair = {
   burn: string;
   receive: string;
   label: string;
+  logo: string;
   decimals: number;
   burnAddress: Address;
   receiveAddress: Address;
@@ -136,10 +137,10 @@ const emptyStats: PoolStats = {
 
 // Original PulseChain token addresses are confirmed. Add each limited token and burn exchange after deployment.
 const pairs: Pair[] = [
-  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
-  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "cashx", burn: "CashX", receive: "LCashX", label: "Limited CashX", logo: "/tokens/cashx.png", decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "distrox", burn: "DistroX", receive: "LDistroX", label: "Limited DistroX", logo: "/tokens/distrox.jpg", decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "divx", burn: "DivX", receive: "LDivX", label: "Limited DivX", logo: "/tokens/divx.png", decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
+  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited GSX", logo: "/tokens/gsx.png", decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: zeroAddress, exchangeAddress: zeroAddress },
 ];
 
 declare global {
@@ -424,8 +425,13 @@ export default function Home() {
               className={item.key === activeKey ? "active" : ""}
               onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Local contract tests passed — live deployment pending"); }}
             >
-              <small>{item.burn}</small>
-              <strong>{item.receive}</strong>
+              <span className="pool-tab-content">
+                <img className="pair-logo" src={item.logo} alt="" aria-hidden="true" />
+                <span>
+                  <small>{item.burn}</small>
+                  <strong>{item.receive}</strong>
+                </span>
+              </span>
             </button>
           ))}
         </div>
@@ -451,7 +457,10 @@ export default function Home() {
                 />
                 <button className="max-button" type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
                 <div className="token-identity">
-                  <b>{pair.burn}</b>
+                  <span className="token-name">
+                    <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                    <b>{pair.burn}</b>
+                  </span>
                   <button
                     className="copy-address"
                     type="button"
@@ -473,7 +482,10 @@ export default function Home() {
               <div>
                 <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
                 <div className="token-identity">
-                  <b>{pair.receive}</b>
+                  <span className="token-name">
+                    <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                    <b>{pair.receive}</b>
+                  </span>
                   <span className="address-pending">Address pending</span>
                 </div>
               </div>

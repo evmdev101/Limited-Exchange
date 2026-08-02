@@ -325,6 +325,18 @@ body.bg-pattern-synapse {
 .pool-tabs button::after { content: ""; position: absolute; left: 20px; right: 20px; bottom: -1px; height: 2px; background: transparent; }
 .pool-tabs button.active { color: var(--fg); background: color-mix(in srgb, var(--fg) 3.5%, transparent); }
 .pool-tabs button.active::after { background: var(--red); box-shadow: 0 0 14px color-mix(in srgb, var(--red) 65%, transparent); }
+.pool-tab-content { display: flex; align-items: center; gap: 11px; }
+.pool-tab-content > span { min-width: 0; }
+.pair-logo, .token-logo {
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--panel);
+  border: 1px solid color-mix(in srgb, var(--fg) 22%, transparent);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--red) 20%, transparent);
+}
+.pair-logo { width: 34px; height: 34px; }
 .pool-tabs small {
   display: block;
   font-family: "Permanent Marker", cursive;
@@ -362,6 +374,8 @@ body.bg-pattern-synapse {
 .amount-panel .max-button { border: 0; padding: 6px 8px; border-radius: 6px; color: var(--red); background: color-mix(in srgb, var(--red) 10%, transparent); cursor: pointer; font-size: 10px; font-weight: 800; }
 .amount-panel b, .receive-panel b { color: var(--cyan); white-space: nowrap; }
 .token-identity { display: flex; flex: 0 0 auto; flex-direction: column; align-items: flex-end; gap: 6px; }
+.token-name { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+.token-logo { width: 30px; height: 30px; }
 .copy-address { display: inline-flex; align-items: center; gap: 6px; max-width: 118px; border: 0; padding: 0; color: var(--muted); background: transparent; cursor: pointer; font: 9px var(--font-geist-mono), monospace; }
 .copy-address:hover { color: var(--red); }
 .copy-address span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
