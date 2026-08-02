@@ -301,7 +301,7 @@ body.bg-pattern-synapse {
 .hero h1 {
   max-width: 860px;
   margin: 20px 0 22px;
-  font-family: var(--font-permanent-marker), cursive;
+  font-family: "Permanent Marker", cursive;
   font-size: clamp(48px, 7vw, 88px);
   font-weight: 400;
   line-height: .98;
@@ -327,7 +327,7 @@ body.bg-pattern-synapse {
 .pool-tabs button.active::after { background: var(--red); box-shadow: 0 0 14px color-mix(in srgb, var(--red) 65%, transparent); }
 .pool-tabs small {
   display: block;
-  font-family: var(--font-permanent-marker), cursive;
+  font-family: "Permanent Marker", cursive;
   font-size: 13px;
   font-weight: 400;
   letter-spacing: .03em;
@@ -335,7 +335,7 @@ body.bg-pattern-synapse {
 .pool-tabs strong {
   display: block;
   margin-top: 5px;
-  font-family: var(--font-permanent-marker), cursive;
+  font-family: "Permanent Marker", cursive;
   font-size: 20px;
   font-weight: 400;
   letter-spacing: .02em;
