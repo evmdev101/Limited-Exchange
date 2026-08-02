@@ -58,34 +58,52 @@ body.bg-pattern-synapse {
 .topbar {
   position: relative;
   z-index: 2;
-  height: 96px;
-  max-width: 1240px;
-  margin: auto;
-  padding: 0 34px;
-  display: flex;
+  width: 100%;
+  height: 100px;
+  padding: 0 clamp(22px, 4vw, 72px);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid color-mix(in srgb, var(--red) 35%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--red) 42%, transparent);
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--red) 10%, transparent), transparent 34%),
+    color-mix(in srgb, var(--panel) 18%, var(--bg));
 }
+.nav-left { justify-self: start; }
 .brand { color: var(--text); display: flex; align-items: center; text-decoration: none; }
 .brand-title {
   color: var(--pink);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 850;
   letter-spacing: .2em;
 }
-.topnav { display: flex; align-items: center; gap: 30px; }
-.topnav a { color: color-mix(in srgb, var(--fg) 72%, transparent); text-decoration: none; font-size: 14px; }
-.topnav a:hover { color: var(--cyan); }
+.nav-center { justify-self: center; }
+.nav-tab {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--red) 58%, transparent);
+  border-radius: 9px;
+  padding: 0 21px;
+  color: var(--cyan);
+  background: color-mix(in srgb, var(--red) 12%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--red) 8%, transparent);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 800;
+}
+.nav-tab:hover { border-color: var(--red); color: var(--red); }
+.nav-actions { display: flex; justify-self: end; align-items: center; gap: 12px; }
 .wallet-button {
   border: 1px solid color-mix(in srgb, var(--red) 55%, transparent);
-  border-radius: 10px;
+  border-radius: 999px;
   padding: 13px 19px;
   color: var(--cyan);
-  background: color-mix(in srgb, var(--red) 8%, transparent);
+  background: color-mix(in srgb, var(--panel) 84%, transparent);
   cursor: pointer;
-  font-weight: 700;
+  font: 700 11px var(--font-geist-mono), monospace;
 }
+.wallet-button:hover { border-color: var(--red); color: var(--red); }
 
 .theme-launcher {
   display: inline-flex;
@@ -369,10 +387,10 @@ footer span { color: var(--pink); letter-spacing: .1em; }
 footer a { color: var(--cyan-dim); text-decoration: none; }
 
 @media (max-width: 760px) {
-  .topbar { height: 78px; padding: 0 18px; }
-  .topnav a { display: none; }
+  .topbar { height: 78px; padding: 0 18px; grid-template-columns: auto 1fr auto; }
   .brand-title { font-size: 13px; letter-spacing: .14em; }
-  .topnav { gap: 10px; }
+  .nav-tab { min-height: 38px; padding: 0 13px; font-size: 11px; }
+  .nav-actions { gap: 8px; }
   .theme-launcher { padding: 9px 10px; font-size: 10px; }
   .wallet-button { padding: 10px 12px; font-size: 12px; }
   .theme-window { top: 50vh; left: 50vw; right: auto; max-height: calc(100vh - 32px); }
@@ -394,9 +412,10 @@ footer a { color: var(--cyan-dim); text-decoration: none; }
 }
 
 @media (max-width: 460px) {
-  .topbar { padding: 0 12px; }
-  .brand-title { max-width: 94px; line-height: 1.2; }
-  .topnav { gap: 6px; }
+  .topbar { padding: 0 12px; grid-template-columns: 1fr auto; }
+  .nav-left { display: none; }
+  .nav-center { justify-self: start; }
+  .nav-actions { gap: 6px; }
   .theme-launcher { padding: 8px; }
   .theme-launcher span { display: none; }
   .wallet-button { padding: 9px; font-size: 10px; }

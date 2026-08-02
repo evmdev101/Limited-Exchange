@@ -356,17 +356,20 @@ export default function Home() {
   return (
     <main className="site-shell">
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Limited Exchange home">
-          <span className="brand-title">LIMITED EXCHANGE</span>
-        </a>
-        <nav className="topnav" aria-label="Primary navigation">
-          <a href="#how">How it works</a>
-          <a href="#pools">Pools</a>
+        <div className="nav-left">
+          <a className="brand" href="#top" aria-label="Limited Exchange home">
+            <span className="brand-title">LIMITED EXCHANGE</span>
+          </a>
+        </div>
+        <nav className="nav-center" aria-label="Primary navigation">
+          <a className="nav-tab active" href="#pools" aria-current="page">Burn Exchange</a>
+        </nav>
+        <div className="nav-actions">
           <ThemePicker />
           <button className="wallet-button" type="button" onClick={connectWallet}>
             {account ? shortAddress(account) : "Connect wallet"}
           </button>
-        </nav>
+        </div>
       </header>
 
       <section className="hero" id="top">
