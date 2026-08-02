@@ -28,6 +28,9 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /LDistroX/);
   assert.match(html, /LDivX/);
   assert.match(html, /LGSX/);
+  assert.match(html, /Choose burn token\. Current pair CashX to LCashX/);
+  assert.match(html, /Paired automatically/);
+  assert.match(html, /LOCKED/);
   assert.doesNotMatch(html, /1:1 burn exchange on PulseChain/);
   assert.doesNotMatch(html, /Verifiable on-chain|Separate reserves|Exact 1:1 output/);
   assert.match(html, /class="nav-tab active"[^>]*aria-current="page"[^>]*>Burn Exchange</);
@@ -62,6 +65,8 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
 
   assert.match(page, /function burnAndClaim\(\)/);
   assert.match(page, /function fundPool\(\)/);
+  assert.match(page, /function selectPair\(key: string\)/);
+  assert.match(page, /role="listbox" aria-label="Choose burn exchange pair"/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
   assert.match(page, /0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665/);

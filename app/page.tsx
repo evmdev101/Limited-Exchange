@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createPublicClient,
   createWalletClient,
@@ -183,12 +183,42 @@ export default function Home() {
   const [stats, setStats] = useState<PoolStats>(emptyStats);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copiedAddress, setCopiedAddress] = useState<Address | null>(null);
+  const [selectorOpen, setSelectorOpen] = useState(false);
+  const selectorRef = useRef<HTMLDivElement>(null);
 
   const pair = useMemo(
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
     [activeKey],
   );
   const configured = pair.exchangeAddress !== zeroAddress;
+
+  function selectPair(key: string) {
+    setActiveKey(key);
+    setAmount("");
+    setSelectorOpen(false);
+    setStatus("Local contract tests passed — live deployment pending");
+  }
+
+  useEffect(() => {
+    if (!selectorOpen) return;
+
+    function handlePointerDown(event: PointerEvent) {
+      if (!selectorRef.current?.contains(event.target as Node)) {
+        setSelectorOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") setSelectorOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [selectorOpen]);
 
   async function copyAddress(address: Address, label: string) {
     try {
@@ -417,7 +447,7 @@ export default function Home() {
               role="tab"
               aria-selected={item.key === activeKey}
               className={item.key === activeKey ? "active" : ""}
-              onClick={() => { setActiveKey(item.key); setAmount(""); setStatus("Local contract tests passed — live deployment pending"); }}
+              onClick={() => selectPair(item.key)}
             >
               <small>{item.burn}</small>
               <strong>{item.receive}</strong>
@@ -433,7 +463,7 @@ export default function Home() {
               </div>
             </div>
 
-            <label className="amount-panel">
+            <div className="amount-panel">
               <span>You burn</span>
               <span className="balance">Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</span>
               <div>
@@ -446,10 +476,45 @@ export default function Home() {
                 />
                 <button className="max-button" type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
                 <div className="token-identity">
-                  <span className="token-name">
-                    <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                    <b>{pair.burn}</b>
-                  </span>
+                  <div className="pair-selector" ref={selectorRef}>
+                    <button
+                      className="pair-selector-trigger"
+                      type="button"
+                      aria-haspopup="listbox"
+                      aria-expanded={selectorOpen}
+                      aria-label={`Choose burn token. Current pair ${pair.burn} to ${pair.receive}`}
+                      onClick={() => setSelectorOpen((open) => !open)}
+                    >
+                      <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
+                      <span className="selector-token-copy">
+                        <b>{pair.burn}</b>
+                        <small>Choose token</small>
+                      </span>
+                      <span className="selector-chevron" aria-hidden="true">⌄</span>
+                    </button>
+
+                    {selectorOpen && (
+                      <div className="pair-selector-menu" role="listbox" aria-label="Choose burn exchange pair">
+                        <p>Select an original token</p>
+                        {pairs.map((item) => (
+                          <button
+                            key={item.key}
+                            type="button"
+                            role="option"
+                            aria-selected={item.key === activeKey}
+                            onClick={() => selectPair(item.key)}
+                          >
+                            <img className="token-logo" src={item.logo} alt="" aria-hidden="true" />
+                            <span className="selector-token-copy">
+                              <b>{item.burn}</b>
+                              <small>Receives {item.receive}</small>
+                            </span>
+                            {item.key === activeKey && <span className="selector-check" aria-hidden="true">✓</span>}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <button
                     className="copy-address"
                     type="button"
@@ -462,7 +527,7 @@ export default function Home() {
                   </button>
                 </div>
               </div>
-            </label>
+            </div>
 
             <div className="rate-divider"><span>↓</span><p>1 {pair.burn} = 1 {pair.receive}</p></div>
 
@@ -471,10 +536,14 @@ export default function Home() {
               <div>
                 <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
                 <div className="token-identity">
-                  <span className="token-name">
+                  <div className="paired-token" aria-label={`${pair.receive} is paired automatically with ${pair.burn}`}>
                     <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                    <b>{pair.receive}</b>
-                  </span>
+                    <span className="selector-token-copy">
+                      <b>{pair.receive}</b>
+                      <small>Paired automatically</small>
+                    </span>
+                    <span className="paired-lock" aria-hidden="true">LOCKED</span>
+                  </div>
                   <span className="address-pending">Address pending</span>
                 </div>
               </div>
