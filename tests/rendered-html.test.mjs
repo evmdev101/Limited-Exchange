@@ -116,6 +116,8 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(styles, /\.nav-actions\s*\{/);
   assert.match(styles, /\.topbar\s*\{[\s\S]*position:\s*sticky[\s\S]*top:\s*0/);
   assert.match(styles, /\.social-icon\s*\{/);
+  assert.match(styles, /\.topbar\s*\{[\s\S]*height:\s*78px[\s\S]*padding:\s*0 40px/);
+  assert.match(styles, /\.social-icon\s*\{[\s\S]*width:\s*38px[\s\S]*height:\s*38px/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   assert.match(core, /BURN_SINK/);
   assert.match(core, /abstract contract BurnExchangeCore/);

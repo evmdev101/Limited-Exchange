@@ -60,8 +60,8 @@ body.bg-pattern-synapse {
   z-index: 80;
   top: 0;
   width: 100%;
-  height: 100px;
-  padding: 0 clamp(22px, 4vw, 72px);
+  height: 78px;
+  padding: 0 40px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
@@ -76,8 +76,8 @@ body.bg-pattern-synapse {
 .nav-left { display: flex; justify-self: start; align-items: center; gap: 10px; }
 .social-icon {
   display: grid;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   flex: 0 0 auto;
   place-items: center;
   border: 1px solid color-mix(in srgb, var(--red) 42%, var(--border));
@@ -93,25 +93,26 @@ body.bg-pattern-synapse {
 .nav-center { justify-self: center; }
 .nav-tab {
   display: inline-flex;
-  min-height: 42px;
   align-items: center;
   border: 1px solid color-mix(in srgb, var(--red) 58%, transparent);
-  border-radius: 9px;
-  padding: 0 21px;
+  border-radius: 999px;
+  padding: 10px 20px;
   color: var(--cyan);
   background: color-mix(in srgb, var(--red) 12%, transparent);
   box-shadow: 0 0 24px color-mix(in srgb, var(--red) 8%, transparent);
   text-decoration: none;
-  font-size: 14px;
+  font-size: .9rem;
   font-weight: 800;
+  letter-spacing: .04em;
+  white-space: nowrap;
 }
 .nav-tab:hover { border-color: var(--red); color: var(--red); }
 .nav-actions { display: flex; justify-self: end; align-items: center; gap: 12px; }
-#pools, #how { scroll-margin-top: 116px; }
+#pools, #how { scroll-margin-top: 94px; }
 .wallet-button {
   border: 1px solid color-mix(in srgb, var(--red) 55%, transparent);
   border-radius: 999px;
-  padding: 13px 19px;
+  padding: 8px 18px;
   color: var(--cyan);
   background: color-mix(in srgb, var(--panel) 84%, transparent);
   cursor: pointer;
@@ -401,15 +402,15 @@ footer span { color: var(--pink); letter-spacing: .1em; }
 footer a { color: var(--cyan-dim); text-decoration: none; }
 
 @media (max-width: 760px) {
-  .topbar { height: auto; min-height: 116px; padding: 10px 14px; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 8px; }
+  .topbar { height: auto; min-height: 104px; padding: 9px 14px; grid-template-columns: 1fr auto; grid-template-rows: auto auto; gap: 6px; }
   .nav-left { grid-column: 1; grid-row: 1; }
   .social-icon { width: 32px; height: 32px; }
   .social-icon svg { width: 16px; height: 16px; }
   .nav-center { grid-column: 1 / -1; grid-row: 2; }
-  .nav-tab { min-height: 38px; padding: 0 13px; font-size: 11px; }
+  .nav-tab { padding: 8px 14px; font-size: 11px; }
   .nav-actions { grid-column: 2; grid-row: 1; gap: 8px; }
   .theme-launcher { padding: 9px 10px; font-size: 10px; }
-  .wallet-button { padding: 10px 12px; font-size: 12px; }
+  .wallet-button { padding: 8px 12px; font-size: 11px; }
   .theme-window { top: 50vh; left: 50vw; right: auto; max-height: calc(100vh - 32px); }
   .theme-window-body { max-height: calc(100vh - 132px); }
   .theme-presets { grid-template-columns: repeat(3, minmax(0, 1fr)); }
