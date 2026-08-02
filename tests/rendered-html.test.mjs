@@ -82,14 +82,15 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e/);
   assert.match(page, /Total burned/);
   assert.match(page, /Unique wallets/);
+  assert.match(page, /className="pool-stats inline-stats"/);
+  assert.match(page, /<summary>Contract addresses<\/summary>/);
+  assert.doesNotMatch(page, /className="supply-card"/);
   assert.match(page, /navigator\.clipboard\.writeText\(address\)/);
   assert.match(page, /Copy.*contract address/);
   assert.match(page, /Limited token contract/);
   assert.match(page, /Burn exchange contract/);
   assert.match(page, /copyAddress\(pair\.receiveAddress, pair\.receive\)/);
   assert.match(page, /copyAddress\(pair\.exchangeAddress, `\$\{pair\.burn\} burn exchange`\)/);
-  assert.match(page, /Burn exchange code/);
-  assert.match(page, /Local tests passed/);
   assert.match(page, /busy \|\| !configured/);
   assert.match(page, /\{configured && \(/);
   assert.match(page, /<ThemePicker \/>/);

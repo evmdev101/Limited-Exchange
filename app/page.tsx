@@ -654,23 +654,17 @@ export default function Home() {
             <p className="status-line" role="status">{status}</p>
           </article>
 
-          <aside className="side-panel">
-            <div className="supply-card">
-              <span className="card-kicker">POOL STATUS</span>
-              <h3>{pair.label}</h3>
-              <div className="orb"><span>1:1</span><small>FIXED RATE</small></div>
-              <div className="pool-stats" aria-label={`${pair.burn} burn exchange statistics`}>
-                <div><span>Total burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
-                <div><span>{pair.receive} distributed</span><strong>{configured ? formatAmount(stats.totalDistributed, pair.decimals) : "Pending"}</strong></div>
-                <div><span>Exchanges</span><strong>{configured ? stats.exchanges.toLocaleString() : "—"}</strong></div>
-                <div><span>Unique wallets</span><strong>{configured ? stats.uniqueExchangers.toLocaleString() : "—"}</strong></div>
-              </div>
+          <section className="below-card-details" aria-label={`${pair.burn} pool details`}>
+            <div className="pool-stats inline-stats" aria-label={`${pair.burn} burn exchange statistics`}>
+              <div><span>Total burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
+              <div><span>{pair.receive} distributed</span><strong>{configured ? formatAmount(stats.totalDistributed, pair.decimals) : "Pending"}</strong></div>
+              <div><span>Exchanges</span><strong>{configured ? stats.exchanges.toLocaleString() : "—"}</strong></div>
+              <div><span>Unique wallets</span><strong>{configured ? stats.uniqueExchangers.toLocaleString() : "—"}</strong></div>
+            </div>
+
+            <details className="contract-details">
+              <summary>Contract addresses</summary>
               <dl>
-                <div><dt>Network</dt><dd>PulseChain</dd></div>
-                <div><dt>Input</dt><dd>{pair.burn}</dd></div>
-                <div><dt>Output</dt><dd>{pair.receive}</dd></div>
-                <div><dt>Mechanism</dt><dd>Burn & transfer</dd></div>
-                <div><dt>Burn exchange code</dt><dd className="test-passed">Local tests passed ✓</dd></div>
                 <div>
                   <dt>Original contract</dt>
                   <dd className="contract-actions">
@@ -701,7 +695,7 @@ export default function Home() {
                   )}
                 </div>
               </dl>
-            </div>
+            </details>
 
             {configured && (
               <>
@@ -720,7 +714,7 @@ export default function Home() {
                 )}
               </>
             )}
-          </aside>
+          </section>
         </div>
       </section>
 
