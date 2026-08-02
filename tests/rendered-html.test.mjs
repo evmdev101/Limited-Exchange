@@ -23,8 +23,8 @@ test("server-renders the Limited Exchange burn interface", async () => {
   assert.match(html, /<title>Limited Exchange<\/title>/i);
   assert.match(html, /Burn the original/);
   assert.match(html, /Claim the limited/);
-  assert.match(html, /Quick Burn/);
   assert.match(html, /aria-label="Quick burn exchange"/);
+  assert.match(html, /<h2>EXCHANGE<\/h2>/);
   assert.match(html, /Choose quick burn token\. Current pair CashX to LCashX/);
   assert.match(html, /CashX/);
   assert.match(html, /LCashX/);
@@ -72,6 +72,7 @@ test("ships the source-matched theme and atomic burn exchange contracts", async 
   assert.match(page, /role="listbox" aria-label="Choose burn exchange pair"/);
   assert.match(page, /role="listbox" aria-label="Choose quick burn exchange pair"/);
   assert.match(page, /className="quick-exchange-button"/);
+  assert.match(page, /className="quick-field-actions"/);
   assert.match(page, /id: 369/);
   assert.match(page, /CashX.*LCashX/);
   assert.match(page, /0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665/);

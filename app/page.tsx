@@ -452,17 +452,16 @@ export default function Home() {
 
         <article className="quick-exchange-card" aria-label="Quick burn exchange">
           <div className="quick-card-heading">
-            <div>
-              <small>LIMITED EXCHANGE</small>
-              <h2>Quick Burn</h2>
-            </div>
-            <span>1:1</span>
+            <h2>EXCHANGE</h2>
           </div>
 
           <div className="quick-field">
             <div className="quick-field-label">
               <span>You burn</span>
-              <button type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
+              <div className="quick-field-actions">
+                <button type="button" onClick={() => setAmount(formatUnits(balance, pair.decimals))}>MAX</button>
+                <small>Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</small>
+              </div>
             </div>
             <div className="quick-field-row">
               <input
@@ -485,8 +484,11 @@ export default function Home() {
                   }}
                 >
                   <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                  <b>{pair.burn}</b>
-                  <span aria-hidden="true">⌄</span>
+                  <span className="quick-token-copy">
+                    <b>{pair.burn}</b>
+                    <small>PulseChain</small>
+                  </span>
+                  <span className="quick-token-chevron" aria-hidden="true">⌄</span>
                 </button>
 
                 {quickSelectorOpen && (
@@ -512,22 +514,23 @@ export default function Home() {
                 )}
               </div>
             </div>
-            <small>Balance: {account ? formatAmount(balance, pair.decimals, 4) : "—"}</small>
+            <small>1 {pair.burn} = 1 {pair.receive}</small>
           </div>
 
-          <div className="quick-rate" aria-hidden="true"><span>↓</span><small>FIXED 1:1</small></div>
+          <div className="quick-rate" aria-hidden="true"><span>↓</span></div>
 
           <div className="quick-field quick-receive-field">
             <div className="quick-field-label">
               <span>You receive</span>
-              <small>Paired automatically</small>
             </div>
             <div className="quick-field-row">
               <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
               <div className="quick-token-locked" aria-label={`${pair.receive} is locked to ${pair.burn}`}>
                 <img className="token-logo" src={pair.logo} alt="" aria-hidden="true" />
-                <b>{pair.receive}</b>
-                <small>LOCKED</small>
+                <span className="quick-token-copy">
+                  <b>{pair.receive}</b>
+                  <small>LOCKED 1:1</small>
+                </span>
               </div>
             </div>
           </div>
