@@ -538,13 +538,13 @@ export default function Home() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <h1>Burn the original<br /><em>Claim the limited</em></h1>
-          <p>Burn supported tokens and claim their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
+          <h1>Burn the original<br /><em>Mint the limited</em></h1>
+          <p>Burn supported tokens and mint their limited counterparts. Every exchange is transparent, atomic, and fixed at a 1:1 rate.</p>
         </div>
 
         <article className="quick-exchange-card" aria-label="Quick burn exchange">
           <div className="quick-card-heading">
-            <h2>EXCHANGE</h2>
+            <h2>Mint {pair.label}</h2>
           </div>
 
           <div className="quick-field">
@@ -613,7 +613,7 @@ export default function Home() {
 
           <div className="quick-field quick-receive-field">
             <div className="quick-field-label">
-              <span>You receive</span>
+              <span>You mint</span>
             </div>
             <div className="quick-field-row">
               <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
@@ -628,7 +628,7 @@ export default function Home() {
           </div>
 
           <button className="quick-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
-            {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
+            {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & mint ${pair.receive}` : "Connect wallet to continue"}
           </button>
         </article>
       </section>
@@ -652,7 +652,7 @@ export default function Home() {
         <div className="exchange-grid">
           <article className="exchange-card">
             <div className="quick-card-heading">
-              <h2>EXCHANGE</h2>
+              <h2>Mint {pair.label}</h2>
             </div>
 
             <div className="quick-field">
@@ -721,7 +721,7 @@ export default function Home() {
 
             <div className="quick-field quick-receive-field">
               <div className="quick-field-label">
-                <span>You receive</span>
+                <span>You mint</span>
               </div>
               <div className="quick-field-row">
                 <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
@@ -736,19 +736,19 @@ export default function Home() {
             </div>
 
             <div className="main-exchange-meta">
-              <span>Available reserve</span>
+              <span>Available to mint</span>
               <strong>{configured ? formatAmount(reserve, pair.decimals) : "Pending"} {pair.receive}</strong>
             </div>
 
             <button className="quick-exchange-button main-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured}>
-              {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & claim ${pair.receive}` : "Connect wallet to continue"}
+              {busy ? "Waiting for confirmation…" : !configured ? `Awaiting ${pair.receive} contract` : account ? `Burn ${pair.burn} & mint ${pair.receive}` : "Connect wallet to continue"}
             </button>
             <p className="status-line" role="status">{status}</p>
           </article>
 
           <section className="below-card-details" aria-label={`${pair.burn} pool details`}>
             <div className="pool-stats inline-stats" aria-label={`${pair.burn} burn exchange statistics`}>
-              <div><span>Total burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
+              <div><span>{pair.burn} burned</span><strong>{configured ? formatAmount(stats.totalBurned, pair.decimals) : "Pending"}</strong></div>
               <div><span>{pair.receive} distributed</span><strong>{configured ? formatAmount(stats.totalDistributed, pair.decimals) : "Pending"}</strong></div>
               <div><span>Exchanges</span><strong>{configured ? stats.exchanges.toLocaleString() : "—"}</strong></div>
               <div><span>Unique wallets</span><strong>{configured ? stats.uniqueExchangers.toLocaleString() : "—"}</strong></div>
