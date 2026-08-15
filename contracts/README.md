@@ -4,21 +4,21 @@ The production system uses four separate contracts. Every contract is permanentl
 
 | Deployable contract | Original token | Limited token |
 | --- | --- | --- |
-| `CashXLCashXMintExchange` | CashX `0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665` | LCashX `0x53aF69CED5ef8AF3dFf24e9B6c05b1daF4a81A5e` |
-| `DistroXLDistroXMintExchange` | DistroX `0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03` | LDistroX `0x6C1CcA7B939a751a61cB0f07534FcA3eB604b980` |
-| `DivXLDivXMintExchange` | DivX `0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3` | LDivX `0x25345a424325AeBDE317D28cB299b63d47122C69` |
-| `GSXLGSXMintExchange` | GSX `0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e` | LGSX `0xd7e0b1a31d03Fba256371d56B19bB7fd05e61C91` |
+| `CashXLCashXMintExchange` | CashX `0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665` | LCashX `0x57cBC908078b291117242385Fe7C0cf3582fA460` |
+| `DistroXLDistroXMintExchange` | DistroX `0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03` | LDistroX `0xfC961146971679Cc4E731F60D72B60eb3dd8b036` |
+| `DivXLDivXMintExchange` | DivX `0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3` | LDivX `0x8DbD0923c0c2dd4973806B655036251610aE11BC` |
+| `GSXLGSXMintExchange` | GSX `0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e` | LGSX `0xCc6A42F028905096c76E5631aed78e20f5CDDFBa` |
 
-## Deployed PulseChain exchanges
+## PulseChain deployments
 
 | Pair | Exchange address |
 | --- | --- |
-| CashX → LCashX | `0x0ed167A5e0E55bD51F504268eBe44cF8681Dd50d` |
-| DistroX → LDistroX | `0xCb53dcA3D4ee58B71916C153c83f50b25b70a5BB` |
-| DivX → LDivX | `0x74c4705865782134612B5E1bcE15E5C42c53c4c5` |
-| GSX → LGSX | `0x31F38Cf2dC34C6d19CCD845486E4639c88b9ffF7` |
+| CashX → LCashX | `0x4E4375142e847eC7212EFEACA956B7b4936D4400` |
+| DistroX → LDistroX | `0x23321FaCb12B5eA17D9caAd48B8e406ad82A0532` |
+| DivX → LDivX | `0xf71624352eDb44f6e622d1e518C6308e6d5dE9Fc` |
+| GSX → LGSX | `0xfe4fF21dD40642dAdbCaD41CC83A9FbC2cC32477` |
 
-The deployments have the expected immutable addresses and percentages. Their matching Limited tokens must still rotate the active minter to these exchange addresses before public use.
+These deployments use the replacement Limited tokens and the reflection-dust-safe swap check. Previous exchange contracts are retired and must not be reused.
 
 All four inherit `SwapBurnMintExchangeCore.sol`. That file contains the shared production logic and is not deployed by itself.
 
@@ -53,7 +53,8 @@ All four Limited tokens were checked on PulseChain before these wrappers were cr
 - 18 decimals, matching their originals.
 - Initial total supply of 1 token.
 - Minting is not finalized.
-- Current minter and owner are `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`.
+- Owner is `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`.
+- Current minter is `0xa0419404eF7b81d9Ec64367eb68e5f425EACE618` until the owner rotates each token to its new exchange.
 
 The starting token is not counted in exchange statistics. It may be sent to a burn address if the project wants the public supply to start at zero, but that is separate from deploying the exchange.
 
@@ -65,7 +66,7 @@ Never press **Finalize Minting**. Finalization removes the minter irreversibly a
 2. Confirm the hardcoded `INITIAL_OWNER` is `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`.
 3. Deploy the matching named contract with the PulseChain/Paris settings in `REMIX-DEPLOYMENT.md`.
 4. Verify all public getters and source code on the explorer.
-5. Add the exchange to the original token's tax exclusions if needed. The 20% swap transfer must arrive at the exchange exactly; a taxed incoming transfer reverts.
+5. Confirm the original token permits the exact incoming transfer. Reflection dust received during the router swap is tolerated; a taxed incoming transfer intentionally reverts.
 6. Rotate only the matching Limited token's minter to the new exchange.
 7. Perform a tiny live exchange and confirm exact supply reduction, PulseX swap, treasury PLS, 1:1 user mint, 5% management mint, and statistics.
 8. Pause immediately if any result differs.

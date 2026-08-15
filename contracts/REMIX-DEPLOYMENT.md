@@ -27,12 +27,12 @@ The deploying wallet pays gas. The initial owner is fixed as `0x175750eA3aDed69d
 
 ## Deploy exactly these contracts
 
-| Source file | Contract selected in Remix | Constructor input |
-| --- | --- | --- |
-| `CashXLCashXMintExchange.sol` | `CashXLCashXMintExchange` | none |
-| `DistroXLDistroXMintExchange.sol` | `DistroXLDistroXMintExchange` | none |
-| `DivXLDivXMintExchange.sol` | `DivXLDivXMintExchange` | none |
-| `GSXLGSXMintExchange.sol` | `GSXLGSXMintExchange` | none |
+| Source file | Contract selected in Remix | Limited token | Constructor input |
+| --- | --- | --- | --- |
+| `CashXLCashXMintExchange.sol` | `CashXLCashXMintExchange` | `0x57cBC908078b291117242385Fe7C0cf3582fA460` | none |
+| `DistroXLDistroXMintExchange.sol` | `DistroXLDistroXMintExchange` | `0xfC961146971679Cc4E731F60D72B60eb3dd8b036` | none |
+| `DivXLDivXMintExchange.sol` | `DivXLDivXMintExchange` | `0x8DbD0923c0c2dd4973806B655036251610aE11BC` | none |
+| `GSXLGSXMintExchange.sol` | `GSXLGSXMintExchange` | `0xCc6A42F028905096c76E5631aed78e20f5CDDFBa` | none |
 
 Do not deploy `SwapBurnMintExchangeCore`, any `I...` interface, `SafeERC20`, or `StorageSlot`. Only deploy one of the four named contracts in the table above.
 
@@ -61,12 +61,9 @@ Use the wallet that currently owns the Limited token. On Nexion, open the Limite
 3. Click **Set Minter** and confirm the wallet transaction.
 4. Refresh and confirm the displayed minter is the exchange address.
 
-Mapping:
-
-- LCashX minter → `0x0ed167A5e0E55bD51F504268eBe44cF8681Dd50d`
-- LDistroX minter → `0xCb53dcA3D4ee58B71916C153c83f50b25b70a5BB`
-- LDivX minter → `0x74c4705865782134612B5E1bcE15E5C42c53c4c5`
-- LGSX minter → `0x31F38Cf2dC34C6d19CCD845486E4639c88b9ffF7`
+Use only the new exchange addresses produced by this deployment. The previous
+exchange contracts are permanently connected to the retired Limited tokens and
+cannot be reused.
 
 Do not transfer token ownership to the exchange. Do not press **Finalize Minting**. Do not renounce ownership.
 
@@ -76,7 +73,7 @@ If a contract is replaced before finalization, the Limited-token owner can rotat
 
 Before public use:
 
-1. If needed, add the exchange to the original token's tax exclusions so the 20% swap amount reaches it exactly.
+1. Confirm the original token permits a direct transfer of the exact input amount to the exchange. The core accepts harmless reflection dust credited during the swap, but a taxed incoming transfer intentionally reverts.
 2. Use a very small amount that still produces a nonzero 5% management mint.
 3. Read `quote(amount)` and `quotePlsOut(amount)`.
 4. Set the website's minimum PLS output using an explicit slippage tolerance.
@@ -88,7 +85,7 @@ Before public use:
 10. Confirm the management wallet received exactly 5% extra Limited tokens.
 11. Confirm all exchange statistics increased by the same values.
 
-Any failure must revert the complete transaction. If the original does not reduce supply exactly or taxes the exchange transfer, do not weaken the checks; correct the token configuration instead.
+Any failure must revert the complete transaction. If the original does not reduce supply exactly or taxes the incoming exchange transfer, correct the token configuration instead of weakening the checks.
 
 ## Explorer verification
 
