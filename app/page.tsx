@@ -506,6 +506,11 @@ export default function Home() {
     const nextPair = pairs.find((item) => item.key === key) ?? pairs[0];
     setActiveKey(nextPair.key);
     setAmount("");
+    setReserve(0n);
+    setBalance(0n);
+    setStats(emptyStats);
+    setExchangeActivated(false);
+    setExchangePaused(false);
     setTransactionStage("ready");
     setSelectorOpen(false);
     setQuickSelectorOpen(false);
@@ -897,7 +902,14 @@ export default function Home() {
           setExchangePaused(currentPaused);
         }
       } catch {
-        if (!cancelled) setStatus("Unable to read this pool right now.");
+        if (!cancelled) {
+          setReserve(0n);
+          setBalance(0n);
+          setStats(emptyStats);
+          setExchangeActivated(false);
+          setExchangePaused(false);
+          setStatus("Unable to read this pool right now.");
+        }
       } finally {
         loading = false;
       }

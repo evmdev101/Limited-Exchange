@@ -75,7 +75,7 @@ abstract contract SwapBurnMintExchangeCore is Ownable, Pausable, ReentrancyGuard
     error InvalidSupplyChange(uint256 beforeSupply, uint256 afterSupply);
     error ExactBurnRequired(uint256 expected, uint256 burned);
     error ExactOriginalRequired(uint256 expected, uint256 received);
-    error RouterDidNotSpendExactOriginal(uint256 expectedBalance, uint256 actualBalance);
+    error RouterDidNotUseFullAllowance(uint256 remainingAllowance);
     error PlsTreasuryShortfall(uint256 minimum, uint256 received);
     error ExactMintRequired(uint256 expected, uint256 received);
     error ExactMintSupplyRequired(uint256 expected, uint256 minted);
@@ -242,12 +242,14 @@ abstract contract SwapBurnMintExchangeCore is Ownable, Pausable, ReentrancyGuard
             block.timestamp
         );
 
-        burnToken.forceApprove(address(pulseXRouter), 0);
-
-        uint256 remainingBalance = burnToken.balanceOf(address(this));
-        if (remainingBalance != exchangeBalanceBefore) {
-            revert RouterDidNotSpendExactOriginal(exchangeBalanceBefore, remainingBalance);
+        // Nexion tokens can credit a very small reflection back to this contract
+        // while the router is swapping. Checking the remaining allowance proves
+        // the router pulled the full swap amount without rejecting that dust.
+        uint256 remainingAllowance = burnToken.allowance(address(this), address(pulseXRouter));
+        if (remainingAllowance != 0) {
+            revert RouterDidNotUseFullAllowance(remainingAllowance);
         }
+        burnToken.forceApprove(address(pulseXRouter), 0);
 
         uint256 treasuryBalanceAfter = treasury.balance;
         plsReceived =

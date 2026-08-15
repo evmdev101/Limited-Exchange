@@ -197,6 +197,25 @@ contract SwapBurnMintExchangeTest {
         require(exchange.exchangeCount() == 1, "wrong exchange count");
     }
 
+    function testRouterReflectionDustDoesNotBlockExchange() public {
+        uint256 amount = 100 * ONE;
+        uint256 reflectionDust = 142_232;
+        uint256 exchangeBalanceBefore = originalToken.balanceOf(address(exchange));
+
+        originalToken.configureRouterReflection(address(router), reflectionDust);
+        alice.burnAndMint(exchange, amount, 110 * ONE);
+
+        require(
+            originalToken.balanceOf(address(exchange)) == exchangeBalanceBefore + reflectionDust,
+            "reflection dust was not credited"
+        );
+        require(limitedToken.balanceOf(address(alice)) == amount, "reflection token user mint failed");
+        require(limitedToken.balanceOf(MANAGEMENT) == 5 * ONE, "reflection token management mint failed");
+        require(exchange.totalBurned() == 80 * ONE, "reflection token burn statistic is wrong");
+        require(exchange.totalOriginalSwapped() == 20 * ONE, "reflection token swap statistic is wrong");
+        require(exchange.exchangeCount() == 1, "reflection token exchange was not counted");
+    }
+
     function testManyWalletsCanExchangeAndAccountingStaysExact() public {
         uint256 walletCount = 25;
         uint256 totalAmount;
