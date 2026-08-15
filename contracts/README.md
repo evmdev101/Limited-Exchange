@@ -20,7 +20,7 @@ The production system uses four separate contracts. Every contract is permanentl
 
 The deployments have the expected immutable addresses and percentages. Their matching Limited tokens must still rotate the active minter to these exchange addresses before public use.
 
-All four inherit `SwapBurnMintExchangeCore.sol`. That file is abstract shared logic and is not deployed by itself. The older `BurnExchanges.sol` contracts are reserve-funded prototypes and must not be used for this launch.
+All four inherit `SwapBurnMintExchangeCore.sol`. That file contains the shared production logic and is not deployed by itself.
 
 ## One atomic exchange
 
@@ -70,6 +70,6 @@ Never press **Finalize Minting**. Finalization removes the minter irreversibly a
 7. Perform a tiny live exchange and confirm exact supply reduction, PulseX swap, treasury PLS, 1:1 user mint, 5% management mint, and statistics.
 8. Pause immediately if any result differs.
 
-CashX passed this complete mainnet flow with the TMT prototype. DistroX, DivX, and GSX still require their own tiny live tests because token behavior and tax settings can differ.
+The production logic passed a complete CashX mainnet prototype flow. Every production pair still requires its own tiny live test because token behavior and tax settings can differ.
 
-Run `pnpm test:contracts` for the local atomicity and accounting tests. Run `pnpm test` for contracts, artifact generation, and the website production build. Independent security review is still recommended before public launch.
+Automated atomicity and accounting tests are kept under `test/`, separate from the production contracts. Run `pnpm test:contracts` for those checks or `pnpm test` for the tests, production artifacts, and website build. Independent security review is still recommended before public launch.

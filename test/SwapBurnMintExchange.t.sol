@@ -3,8 +3,8 @@ pragma solidity ^0.8.24;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SwapBurnMintExchangeCore} from "../contracts/src/SwapBurnMintExchangeCore.sol";
-import {MockBurnableToken} from "../contracts/src/MockBurnableToken.sol";
-import {MockNexionMintableToken} from "../contracts/src/MockNexionMintableToken.sol";
+import {MockBurnableToken} from "./mocks/MockBurnableToken.sol";
+import {MockNexionMintableToken} from "./mocks/MockNexionMintableToken.sol";
 
 interface Vm {
     function deal(address account, uint256 newBalance) external;
@@ -104,7 +104,7 @@ contract SwapMintActor {
     }
 }
 
-contract CashXTMTPlsMintExchangeTest {
+contract SwapBurnMintExchangeTest {
     Vm private constant vm =
         Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
@@ -114,21 +114,21 @@ contract CashXTMTPlsMintExchangeTest {
     address private constant TREASURY = address(0xBEEF);
     address private constant MANAGEMENT = address(0xCAFE);
 
-    MockBurnableToken private cashX;
-    MockNexionMintableToken private tmt;
+    MockBurnableToken private originalToken;
+    MockNexionMintableToken private limitedToken;
     MockPulseXRouterV2 private router;
     TestSwapBurnMintExchange private exchange;
     SwapMintActor private alice;
 
     function setUp() public {
-        cashX = new MockBurnableToken("CashX", "CASHX", address(this), ORIGINAL_SUPPLY);
-        // Nexion requires the token to begin with one TMT. The exchange only
+        originalToken = new MockBurnableToken("Original", "ORG", address(this), ORIGINAL_SUPPLY);
+        // Nexion requires the token to begin with one token. The exchange only
         // counts supply minted after it is deployed.
-        tmt = new MockNexionMintableToken(address(this), ONE);
+        limitedToken = new MockNexionMintableToken(address(this), ONE);
         router = new MockPulseXRouterV2(WPLS);
         exchange = new TestSwapBurnMintExchange(
-            address(cashX),
-            address(tmt),
+            address(originalToken),
+            address(limitedToken),
             address(router),
             WPLS,
             TREASURY,
@@ -138,13 +138,13 @@ contract CashXTMTPlsMintExchangeTest {
         alice = new SwapMintActor();
 
         vm.deal(address(router), 10_000_000 * ONE);
-        cashX.transfer(address(alice), 10_000 * ONE);
-        alice.approve(cashX, address(exchange), type(uint256).max);
-        tmt.setMinter(address(exchange));
+        originalToken.transfer(address(alice), 10_000 * ONE);
+        alice.approve(originalToken, address(exchange), type(uint256).max);
+        limitedToken.setMinter(address(exchange));
     }
 
-    function testStartingOneTmtDoesNotAffectExchangeAccounting() public view {
-        require(tmt.totalSupply() == ONE, "test token must start with one TMT");
+    function testStartingSupplyDoesNotAffectExchangeAccounting() public view {
+        require(limitedToken.totalSupply() == ONE, "limited token must start with one token");
         require(exchange.limitedSupplyAtDeployment() == ONE, "starting supply not recorded");
         require(exchange.totalLimitedMintedToUsers() == 0, "starting supply counted as user mint");
         require(
@@ -170,20 +170,20 @@ contract CashXTMTPlsMintExchangeTest {
 
     function testCompleteAtomicFlow() public {
         uint256 amount = 100 * ONE;
-        uint256 cashSupplyBefore = cashX.totalSupply();
-        uint256 limitedSupplyBefore = tmt.totalSupply();
+        uint256 originalSupplyBefore = originalToken.totalSupply();
+        uint256 limitedSupplyBefore = limitedToken.totalSupply();
         uint256 treasuryPlsBefore = TREASURY.balance;
 
         alice.burnAndMint(exchange, amount, 110 * ONE);
 
-        require(cashX.totalSupply() == cashSupplyBefore - 80 * ONE, "wrong CashX burn");
-        require(cashX.balanceOf(address(router)) == 20 * ONE, "20% was not swapped");
+        require(originalToken.totalSupply() == originalSupplyBefore - 80 * ONE, "wrong burn");
+        require(originalToken.balanceOf(address(router)) == 20 * ONE, "20% was not swapped");
         require(TREASURY.balance - treasuryPlsBefore == 120 * ONE, "wrong PLS treasury output");
-        require(tmt.balanceOf(address(alice)) == 100 * ONE, "user did not receive 1:1 TMT");
-        require(tmt.balanceOf(MANAGEMENT) == 5 * ONE, "management did not receive extra 5%");
+        require(limitedToken.balanceOf(address(alice)) == 100 * ONE, "user did not receive 1:1 output");
+        require(limitedToken.balanceOf(MANAGEMENT) == 5 * ONE, "management did not receive extra 5%");
         require(
-            tmt.totalSupply() == limitedSupplyBefore + 105 * ONE,
-            "TMT supply did not increase by user plus management mints"
+            limitedToken.totalSupply() == limitedSupplyBefore + 105 * ONE,
+            "limited supply did not increase by user plus management mints"
         );
         require(exchange.totalOriginalProcessed() == amount, "wrong processed statistic");
         require(exchange.totalBurned() == 80 * ONE, "wrong burn statistic");
@@ -207,11 +207,11 @@ contract CashXTMTPlsMintExchangeTest {
             uint256 amount = i * ONE;
             (, uint256 swapAmount,,) = exchange.quote(amount);
 
-            cashX.transfer(address(user), amount);
-            user.approve(cashX, address(exchange), amount);
+            originalToken.transfer(address(user), amount);
+            user.approve(originalToken, address(exchange), amount);
             user.burnAndMint(exchange, amount, swapAmount * router.OUTPUT_MULTIPLIER());
 
-            require(tmt.balanceOf(address(user)) == amount, "wallet received wrong mint");
+            require(limitedToken.balanceOf(address(user)) == amount, "wallet received wrong mint");
             require(
                 exchange.accountOriginalProcessed(address(user)) == amount,
                 "wallet accounting is wrong"
@@ -240,7 +240,7 @@ contract CashXTMTPlsMintExchangeTest {
             "wrong multi-wallet management mint total"
         );
         require(
-            tmt.balanceOf(MANAGEMENT) == expectedManagementMint,
+            limitedToken.balanceOf(MANAGEMENT) == expectedManagementMint,
             "management balance is wrong"
         );
         require(
@@ -251,50 +251,50 @@ contract CashXTMTPlsMintExchangeTest {
     }
 
     function testExcessiveMinimumOutputRevertsEverything() public {
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
-        uint256 limitedSupplyBefore = tmt.totalSupply();
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
+        uint256 limitedSupplyBefore = limitedToken.totalSupply();
         uint256 treasuryPlsBefore = TREASURY.balance;
 
         bool succeeded = alice.tryBurnAndMint(exchange, 100 * ONE, 121 * ONE);
 
         require(!succeeded, "excessive minimum unexpectedly succeeded");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "failed swap took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "failed swap burned CashX");
-        require(tmt.totalSupply() == limitedSupplyBefore, "failed swap minted TMT");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "failed swap took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "failed swap burned input");
+        require(limitedToken.totalSupply() == limitedSupplyBefore, "failed swap minted output");
         require(TREASURY.balance == treasuryPlsBefore, "failed swap sent PLS");
         require(exchange.exchangeCount() == 0, "failed swap changed statistics");
     }
 
     function testMintFailureRollsBackBurnSwapAndPlsTransfer() public {
-        tmt.setMintShouldRevert(true);
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
+        limitedToken.setMintShouldRevert(true);
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
         uint256 treasuryPlsBefore = TREASURY.balance;
-        uint256 routerCashBefore = cashX.balanceOf(address(router));
+        uint256 routerOriginalBefore = originalToken.balanceOf(address(router));
 
         bool succeeded = alice.tryBurnAndMint(exchange, 100 * ONE, 110 * ONE);
 
         require(!succeeded, "forced mint failure unexpectedly succeeded");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "mint failure took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "mint failure burned CashX");
-        require(cashX.balanceOf(address(router)) == routerCashBefore, "mint failure left swap");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "mint failure took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "mint failure burned input");
+        require(originalToken.balanceOf(address(router)) == routerOriginalBefore, "mint failure left swap");
         require(TREASURY.balance == treasuryPlsBefore, "mint failure sent PLS");
-        require(tmt.balanceOf(address(alice)) == 0, "mint failure left user TMT");
-        require(tmt.balanceOf(MANAGEMENT) == 0, "mint failure left management TMT");
+        require(limitedToken.balanceOf(address(alice)) == 0, "mint failure left user output");
+        require(limitedToken.balanceOf(MANAGEMENT) == 0, "mint failure left management output");
         require(exchange.exchangeCount() == 0, "mint failure changed statistics");
     }
 
     function testWrongMinterRollsBackEverything() public {
-        tmt.setMinter(address(this));
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
+        limitedToken.setMinter(address(this));
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
 
         bool succeeded = alice.tryBurnAndMint(exchange, 100 * ONE, 110 * ONE);
 
         require(!succeeded, "exchange worked without minter role");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "wrong minter took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "wrong minter burned CashX");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "wrong minter took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "wrong minter burned input");
         require(exchange.exchangeCount() == 0, "wrong minter changed statistics");
     }
 
@@ -302,13 +302,13 @@ contract CashXTMTPlsMintExchangeTest {
         exchange.pause();
         require(exchange.paused(), "exchange was not paused");
 
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
         bool succeededWhilePaused = alice.tryBurnAndMint(exchange, 100 * ONE, 110 * ONE);
 
         require(!succeededWhilePaused, "paused exchange accepted a transaction");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "paused call took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "paused call burned CashX");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "paused call took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "paused call burned input");
         require(exchange.exchangeCount() == 0, "paused call changed statistics");
 
         exchange.unpause();
@@ -324,28 +324,28 @@ contract CashXTMTPlsMintExchangeTest {
     }
 
     function testZeroMinimumOutputRevertsEverything() public {
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
 
         bool succeeded = alice.tryBurnAndMint(exchange, 100 * ONE, 0);
 
         require(!succeeded, "zero minimum output unexpectedly succeeded");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "failed call took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "failed call burned CashX");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "failed call took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "failed call burned input");
         require(exchange.exchangeCount() == 0, "failed call changed statistics");
     }
 
     function testAmountTooSmallForManagementMintRevertsEverything() public {
         uint256 tinyAmount = 19;
-        cashX.transfer(address(alice), tinyAmount);
-        uint256 aliceCashBefore = cashX.balanceOf(address(alice));
-        uint256 cashSupplyBefore = cashX.totalSupply();
+        originalToken.transfer(address(alice), tinyAmount);
+        uint256 aliceOriginalBefore = originalToken.balanceOf(address(alice));
+        uint256 originalSupplyBefore = originalToken.totalSupply();
 
         bool succeeded = alice.tryBurnAndMint(exchange, tinyAmount, 1);
 
         require(!succeeded, "amount with zero management mint unexpectedly succeeded");
-        require(cashX.balanceOf(address(alice)) == aliceCashBefore, "failed call took CashX");
-        require(cashX.totalSupply() == cashSupplyBefore, "failed call burned CashX");
+        require(originalToken.balanceOf(address(alice)) == aliceOriginalBefore, "failed call took input");
+        require(originalToken.totalSupply() == originalSupplyBefore, "failed call burned input");
         require(exchange.exchangeCount() == 0, "failed call changed statistics");
     }
 }

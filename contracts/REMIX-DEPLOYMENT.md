@@ -34,7 +34,7 @@ The deploying wallet pays gas. The initial owner is fixed as `0x175750eA3aDed69d
 | `DivXLDivXMintExchange.sol` | `DivXLDivXMintExchange` | none |
 | `GSXLGSXMintExchange.sol` | `GSXLGSXMintExchange` | none |
 
-Do not deploy `SwapBurnMintExchangeCore`, any `I...` interface, `SafeERC20`, `StorageSlot`, or the legacy `CashXBurnExchange`/`DistroXBurnExchange`/`DivXBurnExchange`/`GSXBurnExchange` contracts.
+Do not deploy `SwapBurnMintExchangeCore`, any `I...` interface, `SafeERC20`, or `StorageSlot`. Only deploy one of the four named contracts in the table above.
 
 ## Verify immediately after every deployment
 
