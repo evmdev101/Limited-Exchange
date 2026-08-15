@@ -12,7 +12,8 @@
     "preview": "vite preview",
     "test": "hardhat test solidity && node scripts/compile-contracts.mjs && vite build",
     "test:contracts": "hardhat test solidity",
-    "contracts:compile": "node scripts/compile-contracts.mjs"
+    "contracts:compile": "node scripts/compile-contracts.mjs",
+    "contracts:check-production": "node scripts/check-production-addresses.mjs"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",

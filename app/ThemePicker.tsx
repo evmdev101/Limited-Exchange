@@ -77,7 +77,8 @@ const themes: Record<string, ThemeColors> = {
   cute: { bg: "#fff0f5", fg: "#d4608a", panel: "#fff8fa", border: "#f0c0d0", red: "#ff6b9d" },
 };
 
-const storageKey = "limited-exchange-theme-v1";
+const storageKey = "limited-exchange-theme-v2";
+const defaultThemeName = "midnight";
 const defaultBackground: BackgroundSettings = {
   pattern: "none",
   effectColor: "",
@@ -88,7 +89,7 @@ const defaultBackground: BackgroundSettings = {
 
 const themeDefaults: Record<string, Partial<BackgroundSettings>> = {
   light: { pattern: "dots" },
-  midnight: { pattern: "rain", effectColor: "#ffffff", intensity: 0.5 },
+  midnight: { pattern: "constellations", effectColor: "#ffffff", intensity: 0.5 },
   paper: { pattern: "dots" },
   cyberpunk: { pattern: "synapse" },
   retrowave: { pattern: "embers" },
@@ -99,6 +100,11 @@ const themeDefaults: Record<string, Partial<BackgroundSettings>> = {
   ume: { pattern: "petals", effectColor: "#f5a0c0" },
   lavender: { frosted: true },
   cute: { pattern: "sparkles", effectColor: "#ff8cb8" },
+};
+
+const defaultThemeBackground: BackgroundSettings = {
+  ...defaultBackground,
+  ...themeDefaults[defaultThemeName],
 };
 
 function displayName(name: string) {
@@ -128,10 +134,10 @@ export default function ThemePicker() {
   const [open, setOpen] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [tab, setTab] = useState<"themes" | "customize">("themes");
-  const [activeName, setActiveName] = useState("dark");
-  const [colors, setColors] = useState<ThemeColors>(themes.dark);
-  const [draft, setDraft] = useState<ThemeColors>(themes.dark);
-  const [background, setBackground] = useState<BackgroundSettings>(defaultBackground);
+  const [activeName, setActiveName] = useState(defaultThemeName);
+  const [colors, setColors] = useState<ThemeColors>(themes[defaultThemeName]);
+  const [draft, setDraft] = useState<ThemeColors>(themes[defaultThemeName]);
+  const [background, setBackground] = useState<BackgroundSettings>(defaultThemeBackground);
   const [position, setPosition] = useState<WindowPosition | null>(null);
   const [snap, setSnap] = useState<SnapZone>(null);
   const [snapHint, setSnapHint] = useState<SnapZone>(null);
@@ -145,8 +151,8 @@ export default function ThemePicker() {
     try {
       const saved = localStorage.getItem(storageKey);
       if (!saved) {
-        applyColors(themes.dark);
-        applyBackground(defaultBackground);
+        applyColors(themes[defaultThemeName]);
+        applyBackground(defaultThemeBackground);
         return;
       }
       const parsed = JSON.parse(saved) as StoredTheme;
@@ -159,6 +165,8 @@ export default function ThemePicker() {
       applyBackground(parsed.background);
     } catch {
       localStorage.removeItem(storageKey);
+      applyColors(themes[defaultThemeName]);
+      applyBackground(defaultThemeBackground);
     }
   }, []);
 

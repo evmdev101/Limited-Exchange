@@ -3,6 +3,10 @@ pragma solidity ^0.8.24;
 
 import {BurnExchangeCore} from "./BurnExchangeCore.sol";
 
+// LEGACY RESERVE-FUNDED PROTOTYPES — DO NOT USE FOR THE PRODUCTION LIMITED
+// TOKEN LAUNCH. The production mint-on-demand contracts are the four named
+// *MintExchange.sol files that inherit SwapBurnMintExchangeCore.
+
 /// @notice CashX -> LCashX burn exchange on PulseChain.
 contract CashXBurnExchange is BurnExchangeCore {
     address public constant ORIGINAL_TOKEN = 0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665;

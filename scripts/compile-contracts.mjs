@@ -26,7 +26,11 @@ const input = {
   settings: {
     optimizer: { enabled: true, runs: 200 },
     evmVersion: "paris",
-    outputSelection: { "*": { "*": ["abi", "evm.bytecode.object"] } },
+    outputSelection: {
+      "*": {
+        "*": ["abi", "evm.bytecode.object", "evm.deployedBytecode.object"],
+      },
+    },
   },
 };
 
@@ -44,20 +48,32 @@ for (const artifactName of fs.readdirSync(artifactDir)) {
 }
 
 const productionContracts = [
-  "CashXBurnExchange",
-  "DistroXBurnExchange",
-  "DivXBurnExchange",
-  "GSXBurnExchange",
+  {
+    name: "CashXLCashXMintExchange",
+    source: "contracts/src/CashXLCashXMintExchange.sol",
+  },
+  {
+    name: "DistroXLDistroXMintExchange",
+    source: "contracts/src/DistroXLDistroXMintExchange.sol",
+  },
+  {
+    name: "DivXLDivXMintExchange",
+    source: "contracts/src/DivXLDivXMintExchange.sol",
+  },
+  {
+    name: "GSXLGSXMintExchange",
+    source: "contracts/src/GSXLGSXMintExchange.sol",
+  },
 ];
 
-for (const contractName of productionContracts) {
-  const contract = output.contracts["contracts/src/BurnExchanges.sol"][contractName];
+for (const { name: contractName, source: sourceName } of productionContracts) {
+  const contract = output.contracts[sourceName][contractName];
   fs.writeFileSync(
     path.join(artifactDir, `${contractName}.json`),
     JSON.stringify(
       {
         contractName,
-        sourceName: "contracts/src/BurnExchanges.sol",
+        sourceName,
         compiler: {
           version: solc.version(),
           evmVersion: input.settings.evmVersion,
@@ -65,6 +81,7 @@ for (const contractName of productionContracts) {
         },
         abi: contract.abi,
         bytecode: `0x${contract.evm.bytecode.object}`,
+        deployedBytecode: `0x${contract.evm.deployedBytecode.object}`,
       },
       null,
       2,
@@ -72,4 +89,16 @@ for (const contractName of productionContracts) {
   );
 }
 
-process.stdout.write(`${productionContracts.join(", ")} compiled successfully.\n`);
+for (const { name: contractName, source: sourceName } of productionContracts) {
+  const contract = output.contracts[sourceName][contractName];
+  const deployedBytes = contract.evm.deployedBytecode.object.length / 2;
+  if (deployedBytes > 24_576) {
+    throw new Error(
+      `${contractName} runtime bytecode is ${deployedBytes} bytes and exceeds the 24,576-byte EVM limit.`,
+    );
+  }
+}
+
+process.stdout.write(
+  `${productionContracts.map(({ name }) => name).join(", ")} compiled successfully.\n`,
+);

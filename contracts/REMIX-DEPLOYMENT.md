@@ -1,78 +1,103 @@
 # PulseChain Remix deployment checklist
 
-Use this checklist for all four production burn exchanges. Nothing in this file is a contract address or permission to deploy; wait for the four final limited-token addresses and the confirmed owner wallet.
+This prepares the four production contracts but does not authorize deployment or minter changes. The Limited-token creator wallet is locked in as the initial exchange owner.
 
-## Required compiler settings
+## Compiler settings
 
-Set these values in Remix's **Solidity Compiler** panel before compiling:
+Use the same settings for every contract:
 
-- Compiler: `0.8.36+commit.8a079791`
+- Solidity compiler: `0.8.36+commit.8a079791`
 - EVM version: `paris`
-- Enable optimization: yes
-- Optimization runs: `200`
-- Use configuration file / via IR: `viaIR` must remain off
+- Optimization: enabled
+- Runs: `200`
+- `viaIR`: off
+- OpenZeppelin Contracts: `5.6.1` from this project
 
-PulseChain does not support the Cancun `MCOPY` opcode used by newer EVM targets. Do not leave EVM version on the compiler default, and do not select Cancun. The local compiler, generated deployment artifacts, and Hardhat tests are all locked to Paris.
-
-This project uses OpenZeppelin Contracts `5.6.1`. Compile from this project with its installed dependency rather than allowing Remix to silently resolve a different OpenZeppelin version.
+Do not use the compiler default, Cancun, or Osaka. PulseChain deployment bytecode must target Paris.
 
 ## Wallet and network
 
-- Remix environment: **Injected Provider - MetaMask** (or the connected wallet provider)
-- Network: **PulseChain Mainnet**
+- Environment: connected browser wallet
+- Network: PulseChain Mainnet
 - Chain ID: `369`
 - Constructor value: `0` PLS
-- Deploying wallet: the wallet paying gas; it does not have to remain owner if the confirmed owner wallet is passed to the constructor
+- Constructor argument: none
 
-Confirm the wallet shows PulseChain and chain ID 369 immediately before every deployment. Never paste or expose a private key in Remix.
+The deploying wallet pays gas. The initial owner is fixed as `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`, the Limited-token creator wallet. It controls only pause/unpause and exchange ownership; the PLS treasury and 5% management recipient are also fixed in the source.
 
-## Deployments
+## Deploy exactly these contracts
 
-Compile `contracts/src/BurnExchanges.sol`, then select one named contract at a time. Each constructor takes the limited-token address first and the owner wallet second.
-
-| Contract selected in Remix | `limitedToken_` | `initialOwner` |
+| Source file | Contract selected in Remix | Constructor input |
 | --- | --- | --- |
-| `CashXBurnExchange` | Final LCashX address | Confirmed project owner wallet |
-| `DistroXBurnExchange` | Final LDistroX address | Confirmed project owner wallet |
-| `DivXBurnExchange` | Final LDivX address | Confirmed project owner wallet |
-| `GSXBurnExchange` | Final LGSX address | Confirmed project owner wallet |
+| `CashXLCashXMintExchange.sol` | `CashXLCashXMintExchange` | none |
+| `DistroXLDistroXMintExchange.sol` | `DistroXLDistroXMintExchange` | none |
+| `DivXLDivXMintExchange.sol` | `DivXLDivXMintExchange` | none |
+| `GSXLGSXMintExchange.sol` | `GSXLGSXMintExchange` | none |
 
-Do not deploy `BurnExchangeCore`; it is abstract shared code and is already included inside every named burn exchange.
+Do not deploy `SwapBurnMintExchangeCore`, any `I...` interface, `SafeERC20`, `StorageSlot`, or the legacy `CashXBurnExchange`/`DistroXBurnExchange`/`DivXBurnExchange`/`GSXBurnExchange` contracts.
 
-## Check immediately after each deployment
+## Verify immediately after every deployment
 
-Before sending limited tokens to a new exchange, read these public values in Remix:
+Read the following getters before changing a Limited token's minter:
 
-1. `burnToken()` equals the correct fixed original-token address.
-2. `limitedToken()` equals the limited-token address passed to the constructor.
-3. `owner()` equals the confirmed owner wallet.
-4. `reserve()` equals zero before funding.
-5. `paused()` is false.
+1. `burnToken()` equals the intended original token.
+2. `limitedToken()` equals the intended matching Limited token.
+3. `pulseXRouter()` equals `0x165C3410fC91EF562C50559f7d2289fEbed552d9`.
+4. `wrappedPls()` equals `0xA1077a294dDE1B09bB078844df40758a5D0f9a27`.
+5. `treasury()` equals `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`.
+6. `managementWallet()` equals `0xDBA19652f7Ed3f3AE6266c91669C6083ba8cE557`.
+7. `owner()` equals `0x175750eA3aDed69d2375ffe044BFb6E46ec90702`.
+8. `paused()` is false.
+9. `BURN_BPS()` is `8000`, `SWAP_BPS()` is `2000`, and `MANAGEMENT_MINT_BPS()` is `500`.
 
-Record the deployment transaction and contract address. If any address is wrong, abandon that deployment and do not fund it; constructor values cannot be edited.
+If any value is wrong, abandon that deployment. Constructor values and immutable addresses cannot be edited.
 
-## Small live test before launch
+## Connect each Limited token to its exchange
 
-1. If the limited token has transfer taxes, exempt the burn exchange first.
-2. From the owner wallet, approve a small limited-token amount to the burn exchange.
-3. Call `fund(amount)` and confirm `reserve()` increased by the amount actually received.
-4. From a separate test wallet, approve the matching original token.
-5. Call `burnAndClaim(amount)` with a very small amount.
-6. Confirm the original token's `totalSupply()` fell by exactly that amount.
-7. Confirm the test wallet received exactly the same amount of the limited token.
-8. Confirm `totalBurned`, `totalLimitedDistributed`, `exchangeCount`, and `uniqueExchangers` updated.
+Use the wallet that currently owns the Limited token. On Nexion, open the Limited token's **Manage Token** page and find **Mint Controls**.
 
-If the limited output is taxed or the original does not reduce total supply through the dead-address burn path, the transaction will revert. Stop and resolve the token configuration rather than weakening the exchange checks.
+1. Copy the verified matching exchange address.
+2. Paste it under **Rotate Minter**.
+3. Click **Set Minter** and confirm the wallet transaction.
+4. Refresh and confirm the displayed minter is the exchange address.
+
+Mapping:
+
+- LCashX minter → `0x0ed167A5e0E55bD51F504268eBe44cF8681Dd50d`
+- LDistroX minter → `0xCb53dcA3D4ee58B71916C153c83f50b25b70a5BB`
+- LDivX minter → `0x74c4705865782134612B5E1bcE15E5C42c53c4c5`
+- LGSX minter → `0x31F38Cf2dC34C6d19CCD845486E4639c88b9ffF7`
+
+Do not transfer token ownership to the exchange. Do not press **Finalize Minting**. Do not renounce ownership.
+
+If a contract is replaced before finalization, the Limited-token owner can rotate the minter from the old exchange to the verified replacement. The old contract immediately becomes unable to mint.
+
+## Tiny live test for every pair
+
+Before public use:
+
+1. If needed, add the exchange to the original token's tax exclusions so the 20% swap amount reaches it exactly.
+2. Use a very small amount that still produces a nonzero 5% management mint.
+3. Read `quote(amount)` and `quotePlsOut(amount)`.
+4. Set the website's minimum PLS output using an explicit slippage tolerance.
+5. Approve the original token for only the test amount.
+6. Call `burnAndMint(amount, minPlsOut)`.
+7. Confirm 80% reduced the original `totalSupply()` and the dead-address transfer is visible.
+8. Confirm 20% was swapped through PulseX and native PLS reached the fixed treasury.
+9. Confirm the user received exactly 1:1 Limited tokens.
+10. Confirm the management wallet received exactly 5% extra Limited tokens.
+11. Confirm all exchange statistics increased by the same values.
+
+Any failure must revert the complete transaction. If the original does not reduce supply exactly or taxes the exchange transfer, do not weaken the checks; correct the token configuration instead.
 
 ## Explorer verification
 
-Use the exact deployment settings when verifying on the PulseChain explorer:
+Verify with the exact deployment settings:
 
 - Compiler: `0.8.36+commit.8a079791`
-- EVM version: `paris`
-- Optimization: enabled
-- Optimization runs: `200`
-- Contract name: the exact named exchange deployed
-- Constructor arguments: the same limited-token and owner addresses used at deployment
+- EVM: `paris`
+- Optimization: enabled, 200 runs
+- Contract: exact named production contract
+- Constructor argument: none
 
-After verification and the small live test, add the limited-token and burn-exchange addresses to `contracts/deployment/pulsechain-pools.json` and the website configuration.
+After all four tiny tests pass, record the addresses in `contracts/deployment/pulsechain-pools.json`, update the website configuration, run the full build, and request an independent security review before public launch.
