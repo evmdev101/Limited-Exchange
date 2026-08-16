@@ -477,6 +477,7 @@ export default function Home() {
   const [amount, setAmount] = useState("");
   const [reserve, setReserve] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
+  const [limitedBalance, setLimitedBalance] = useState<bigint>(0n);
   const [status, setStatus] = useState("");
   const [busy, setBusy] = useState(false);
   const [exchangeActivated, setExchangeActivated] = useState(false);
@@ -508,6 +509,7 @@ export default function Home() {
     setAmount("");
     setReserve(0n);
     setBalance(0n);
+    setLimitedBalance(0n);
     setStats(emptyStats);
     setExchangeActivated(false);
     setExchangePaused(false);
@@ -819,12 +821,16 @@ export default function Home() {
         const balancePromise = account
           ? publicClient.readContract({ address: pair.burnAddress, abi: erc20Abi, functionName: "balanceOf", args: [account] })
           : Promise.resolve(0n);
+        const limitedBalancePromise = account
+          ? publicClient.readContract({ address: pair.receiveAddress, abi: erc20Abi, functionName: "balanceOf", args: [account] })
+          : Promise.resolve(0n);
 
         if (!configured) {
-          const nextBalance = await balancePromise;
+          const [nextBalance, nextLimitedBalance] = await Promise.all([balancePromise, limitedBalancePromise]);
           if (!cancelled) {
             setReserve(0n);
             setBalance(nextBalance);
+            setLimitedBalance(nextLimitedBalance);
             setStats(emptyStats);
             setExchangeActivated(false);
             setExchangePaused(false);
@@ -840,6 +846,7 @@ export default function Home() {
 
         let nextReserve = 0n;
         let nextBalance = 0n;
+        let nextLimitedBalance = 0n;
         let nextStats = emptyStats;
 
         if (pair.swapToPls) {
@@ -851,6 +858,7 @@ export default function Home() {
             totalManagementMinted,
             exchanges,
             walletBalance,
+            limitedWalletBalance,
           ] = await Promise.all([
             publicClient.readContract({ address: pair.exchangeAddress, abi: swapBurnMintExchangeAbi, functionName: "totalBurned" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: swapBurnMintExchangeAbi, functionName: "totalOriginalSwapped" }),
@@ -859,8 +867,10 @@ export default function Home() {
             publicClient.readContract({ address: pair.exchangeAddress, abi: swapBurnMintExchangeAbi, functionName: "totalLimitedMintedToManagement" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: swapBurnMintExchangeAbi, functionName: "exchangeCount" }),
             balancePromise,
+            limitedBalancePromise,
           ]);
           nextBalance = walletBalance;
+          nextLimitedBalance = limitedWalletBalance;
           nextStats = {
             ...emptyStats,
             totalBurned,
@@ -871,32 +881,37 @@ export default function Home() {
             exchanges,
           };
         } else if (pair.mintOnDemand) {
-          const [totalBurned, totalDistributed, totalTreasurySent, exchanges, uniqueExchangers, walletBalance] = await Promise.all([
+          const [totalBurned, totalDistributed, totalTreasurySent, exchanges, uniqueExchangers, walletBalance, limitedWalletBalance] = await Promise.all([
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalBurned" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalLimitedMinted" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalTreasurySent" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "exchangeCount" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "uniqueExchangers" }),
             balancePromise,
+            limitedBalancePromise,
           ]);
           nextBalance = walletBalance;
+          nextLimitedBalance = limitedWalletBalance;
           nextStats = { ...emptyStats, totalBurned, totalDistributed, totalTreasurySent, exchanges, uniqueExchangers };
         } else {
-          const [poolReserve, totalBurned, totalDistributed, exchanges, uniqueExchangers, walletBalance] = await Promise.all([
+          const [poolReserve, totalBurned, totalDistributed, exchanges, uniqueExchangers, walletBalance, limitedWalletBalance] = await Promise.all([
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "reserve" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalBurned" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "totalLimitedDistributed" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "exchangeCount" }),
             publicClient.readContract({ address: pair.exchangeAddress, abi: burnExchangeAbi, functionName: "uniqueExchangers" }),
             balancePromise,
+            limitedBalancePromise,
           ]);
           nextReserve = poolReserve;
           nextBalance = walletBalance;
+          nextLimitedBalance = limitedWalletBalance;
           nextStats = { ...emptyStats, totalBurned, totalDistributed, exchanges, uniqueExchangers };
         }
         if (!cancelled) {
           setReserve(nextReserve);
           setBalance(nextBalance);
+          setLimitedBalance(nextLimitedBalance);
           setStats(nextStats);
           setExchangeActivated(nextExchangeActivated);
           setExchangePaused(currentPaused);
@@ -905,6 +920,7 @@ export default function Home() {
         if (!cancelled) {
           setReserve(0n);
           setBalance(0n);
+          setLimitedBalance(0n);
           setStats(emptyStats);
           setExchangeActivated(false);
           setExchangePaused(false);
@@ -1211,6 +1227,7 @@ export default function Home() {
           <div className="quick-field quick-receive-field">
             <div className="quick-field-label">
               <span>You mint</span>
+              <small>Balance: {account ? `${formatAmount(limitedBalance, pair.decimals, 4)} ${pair.receive}` : "—"}</small>
             </div>
             <div className="quick-field-row">
               <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
@@ -1336,6 +1353,7 @@ export default function Home() {
             <div className="quick-field quick-receive-field">
               <div className="quick-field-label">
                 <span>You mint</span>
+                <small>Balance: {account ? `${formatAmount(limitedBalance, pair.decimals, 4)} ${pair.receive}` : "—"}</small>
               </div>
               <div className="quick-field-row">
                 <strong>{amount ? formatAmountInput(amount) : "0.00"}</strong>
