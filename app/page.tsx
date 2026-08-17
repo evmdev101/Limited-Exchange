@@ -249,6 +249,15 @@ type BrowserWalletProvider = EIP1193Provider & {
   isInternetMoney?: boolean;
   isInternetMoneyWallet?: boolean;
   isIMWallet?: boolean;
+  isSafePal?: boolean;
+  isSafePalWallet?: boolean;
+  isOkxWallet?: boolean;
+  isOKXWallet?: boolean;
+  isZKXWallet?: boolean;
+  isZkxWallet?: boolean;
+  isZerion?: boolean;
+  isZerionWallet?: boolean;
+  isUniswapWallet?: boolean;
   on?: (event: string, listener: (...args: unknown[]) => void) => void;
   removeListener?: (event: string, listener: (...args: unknown[]) => void) => void;
 };
@@ -266,10 +275,11 @@ type Eip6963ProviderDetail = {
 };
 
 type WalletOption = {
-  key: "metamask" | "internet-money" | "rabby";
+  key: string;
   name: string;
   provider: BrowserWalletProvider | null;
   icon: string;
+  description: string;
 };
 
 const emptyStats: PoolStats = {
@@ -291,9 +301,10 @@ const cashXWalletAsset = (path: string) =>
   `https://raw.githubusercontent.com/evmdev101/CashX/main/${path}`;
 
 const walletCatalog: WalletOption[] = [
-  { key: "metamask", name: "MetaMask", provider: null, icon: cashXWalletAsset("metamask-wallet-icon.svg") },
-  { key: "internet-money", name: "Internet Money Wallet", provider: null, icon: cashXWalletAsset("internetmoneywallet.png") },
-  { key: "rabby", name: "Rabby Wallet", provider: null, icon: cashXWalletAsset("rabby-clean.png") },
+  { key: "metamask", name: "MetaMask", provider: null, icon: cashXWalletAsset("metamask-wallet-icon.svg"), description: "MetaMask browser wallet" },
+  { key: "internet-money", name: "Internet Money Wallet", provider: null, icon: cashXWalletAsset("internetmoneywallet.png"), description: "Internet Money browser wallet" },
+  { key: "rabby", name: "Rabby Wallet", provider: null, icon: cashXWalletAsset("rabby-clean.png"), description: "Rabby browser wallet" },
+  { key: "safepal", name: "SafePal Wallet", provider: null, icon: publicAsset("safepal-wallet.svg"), description: "SafePal browser wallet" },
 ];
 
 const walletPreferenceStorageKey = "limited-exchange.wallet-provider";
@@ -313,6 +324,10 @@ declare global {
     ethereum?: BrowserWalletProvider;
     rabby?: BrowserWalletProvider;
     internetMoney?: BrowserWalletProvider;
+    okxwallet?: BrowserWalletProvider;
+    safepal?: BrowserWalletProvider;
+    safepalProvider?: BrowserWalletProvider;
+    zkx?: BrowserWalletProvider;
     phantom?: { ethereum?: BrowserWalletProvider };
   }
 }
@@ -322,6 +337,7 @@ function walletKeyFromIdentity(name = "", rdns = ""): WalletOption["key"] | null
   if (identity.includes("rabby")) return "rabby";
   if (identity.includes("internet money") || identity.includes("internetmoney")) return "internet-money";
   if (identity.includes("metamask") || identity.includes("io.metamask")) return "metamask";
+  if (identity.includes("safepal") || identity.includes("safe pal")) return "safepal";
   return null;
 }
 
@@ -338,8 +354,34 @@ function isActualMetaMaskProvider(provider: BrowserWalletProvider) {
     && !provider.isBraveWallet
     && !provider.isTrust
     && !provider.isTrustWallet
+    && !provider.isSafePal
+    && !provider.isSafePalWallet
+    && !provider.isOkxWallet
+    && !provider.isOKXWallet
+    && !provider.isZKXWallet
+    && !provider.isZkxWallet
+    && !provider.isZerion
+    && !provider.isZerionWallet
+    && !provider.isUniswapWallet
     && provider !== window.phantom?.ethereum,
   );
+}
+
+function genericWalletName(provider: BrowserWalletProvider) {
+  if (provider.isSafePal || provider.isSafePalWallet) return "SafePal Wallet";
+  if (provider.isOkxWallet || provider.isOKXWallet) return "OKX Wallet";
+  if (provider.isZKXWallet || provider.isZkxWallet) return "ZKX Wallet";
+  if (provider.isZerion || provider.isZerionWallet) return "Zerion Wallet";
+  if (provider.isUniswapWallet) return "Uniswap Extension";
+  if (provider.isCoinbaseWallet) return "Coinbase Wallet";
+  if (provider.isTrust || provider.isTrustWallet) return "Trust Wallet";
+  if (provider.isBraveWallet) return "Brave Wallet";
+  if (provider.isPhantom || provider === window.phantom?.ethereum) return "Phantom Wallet";
+  return "Browser / Mobile Wallet";
+}
+
+function walletOptionSlug(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "wallet";
 }
 
 function shortAddress(address: Address) {
@@ -493,6 +535,7 @@ export default function Home() {
   const [walletModalOpen, setWalletModalOpen] = useState(false);
   const [walletPickerOpen, setWalletPickerOpen] = useState(false);
   const [walletOptions, setWalletOptions] = useState<WalletOption[]>(walletCatalog);
+  const [walletSearch, setWalletSearch] = useState("");
   const [walletProvider, setWalletProvider] = useState<BrowserWalletProvider | null>(null);
   const announcedProviders = useRef<Map<string, Eip6963ProviderDetail>>(new Map());
   const [nativeBalance, setNativeBalance] = useState<bigint>(0n);
@@ -502,6 +545,13 @@ export default function Home() {
     [activeKey],
   );
   const configured = pair.exchangeAddress !== zeroAddress;
+  const filteredWalletOptions = useMemo(() => {
+    const query = walletSearch.trim().toLowerCase();
+    if (!query) return walletOptions;
+    return walletOptions.filter((wallet) =>
+      `${wallet.name} ${wallet.description}`.toLowerCase().includes(query),
+    );
+  }, [walletOptions, walletSearch]);
 
   function selectPair(key: string) {
     const nextPair = pairs.find((item) => item.key === key) ?? pairs[0];
@@ -581,40 +631,67 @@ export default function Home() {
     window.dispatchEvent(new Event("eip6963:requestProvider"));
     await new Promise((resolve) => window.setTimeout(resolve, 180));
 
-    const detected = new Map<WalletOption["key"], BrowserWalletProvider>();
-    const addProvider = (key: WalletOption["key"] | null, provider?: BrowserWalletProvider) => {
+    const detected = new Map<string, WalletOption>();
+    const seenProviders = new Set<BrowserWalletProvider>();
+    const addProvider = (
+      key: string | null,
+      provider?: BrowserWalletProvider,
+      info?: Pick<Eip6963ProviderInfo, "name" | "icon">,
+    ) => {
       if (!provider || typeof provider.request !== "function") return;
-      if (key && !detected.has(key)) detected.set(key, provider);
+      if (!key || detected.has(key) || seenProviders.has(provider)) return;
+      const catalogWallet = walletCatalog.find((wallet) => wallet.key === key);
+      const detectedName = info?.name || catalogWallet?.name || genericWalletName(provider);
+      seenProviders.add(provider);
+      detected.set(key, {
+        key,
+        name: detectedName,
+        provider,
+        icon: info?.icon || catalogWallet?.icon || publicAsset("wallet-browser.svg"),
+        description: "Injected wallet ready to connect",
+      });
     };
 
     // EIP-6963 includes a wallet name and reverse-DNS identity. Prefer that
     // identity over compatibility flags: Phantom and several other wallets
     // intentionally expose `isMetaMask` so older dApps continue to work.
     announcedProviders.current.forEach(({ info, provider }) => {
-      addProvider(walletKeyFromIdentity(info.name, info.rdns), provider);
+      const catalogKey = walletKeyFromIdentity(info.name, info.rdns);
+      const dynamicKey = `eip6963:${walletOptionSlug(info.rdns || info.name || info.uuid)}`;
+      addProvider(catalogKey ?? dynamicKey, provider, info);
     });
 
-    const addLegacyProvider = (provider?: BrowserWalletProvider) => {
+    const addLegacyProvider = (provider?: BrowserWalletProvider, suffix = "default") => {
       if (!provider) return;
-      if (provider.isRabby) addProvider("rabby", provider);
+      if (provider.isSafePal || provider.isSafePalWallet) addProvider("safepal", provider);
+      else if (provider.isRabby) addProvider("rabby", provider);
       else if (isInternetMoneyProvider(provider)) addProvider("internet-money", provider);
       else if (isActualMetaMaskProvider(provider)) addProvider("metamask", provider);
+      else {
+        const name = genericWalletName(provider);
+        addProvider(`legacy:${walletOptionSlug(name)}:${suffix}`, provider, { name });
+      }
     };
 
-    window.ethereum?.providers?.forEach(addLegacyProvider);
+    window.ethereum?.providers?.forEach((provider, index) => addLegacyProvider(provider, String(index)));
     addProvider("rabby", window.rabby);
     addProvider("internet-money", window.internetMoney);
-    addLegacyProvider(window.ethereum);
+    addLegacyProvider(window.okxwallet, "okx");
+    addLegacyProvider(window.safepalProvider ?? window.safepal, "safepal");
+    addLegacyProvider(window.zkx, "zkx");
+    addLegacyProvider(window.phantom?.ethereum, "phantom");
+    if (!window.ethereum?.providers?.length) addLegacyProvider(window.ethereum);
 
-    const options = walletCatalog.map((wallet) => ({
-      ...wallet,
-      provider: detected.get(wallet.key) ?? null,
-    }));
+    const catalogKeys = new Set(walletCatalog.map((wallet) => wallet.key));
+    const catalogOptions = walletCatalog.map((wallet) => detected.get(wallet.key) ?? wallet);
+    const dynamicOptions = Array.from(detected.values()).filter((wallet) => !catalogKeys.has(wallet.key));
+    const options = [...catalogOptions, ...dynamicOptions];
     setWalletOptions(options);
     return options;
   }
 
   async function openWalletPicker() {
+    setWalletSearch("");
     setWalletPickerOpen(true);
     await discoverWallets();
   }
@@ -707,8 +784,8 @@ export default function Home() {
     let cancelled = false;
 
     async function restoreWalletConnection() {
-      const savedKey = window.localStorage.getItem(walletPreferenceStorageKey) as WalletOption["key"] | null;
-      if (!savedKey || !walletCatalog.some((wallet) => wallet.key === savedKey)) return;
+      const savedKey = window.localStorage.getItem(walletPreferenceStorageKey);
+      if (!savedKey) return;
 
       const options = await discoverWallets();
       if (cancelled) return;
@@ -1085,12 +1162,28 @@ export default function Home() {
         >
           <section className="wallet-picker-box" role="dialog" aria-modal="true" aria-labelledby="wallet-picker-title">
             <div className="wallet-picker-head">
-              <strong id="wallet-picker-title">Choose Wallet</strong>
+              <div className="wallet-picker-heading">
+                <strong id="wallet-picker-title">Connect Wallet</strong>
+                <span>PulseChain · {walletOptions.filter((wallet) => wallet.provider).length} detected</span>
+              </div>
               <button type="button" onClick={() => setWalletPickerOpen(false)} aria-label="Close wallet picker">×</button>
             </div>
+            <label className="wallet-picker-search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                <path d="m16 16 5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+              <input
+                aria-label="Search wallets"
+                placeholder="Search wallets"
+                value={walletSearch}
+                onChange={(event) => setWalletSearch(event.target.value)}
+              />
+            </label>
             <div className="wallet-picker-list">
-              {walletOptions.map((wallet) => {
+              {filteredWalletOptions.map((wallet) => {
                 const installed = Boolean(wallet.provider);
+                const catalogWallet = walletCatalog.some((item) => item.key === wallet.key);
                 return (
                   <button
                     className="wallet-option"
@@ -1099,20 +1192,26 @@ export default function Home() {
                     disabled={!installed}
                     onClick={() => connectWallet(wallet.provider, wallet.name, wallet.key)}
                   >
-                    <span className={`wallet-option-icon wallet-icon-${wallet.key}`} aria-hidden="true">
+                    <span className={`wallet-option-icon wallet-icon-${catalogWallet ? wallet.key : "browser-wallet"}`} aria-hidden="true">
                       <img src={wallet.icon} alt="" />
                     </span>
-                    <span className="wallet-option-copy">
-                      <span className="wallet-option-name">{wallet.name}</span>
-                      <span className="wallet-option-sub">{installed ? "Ready to connect" : "Install or unlock wallet"}</span>
-                    </span>
+                      <span className="wallet-option-copy">
+                        <span className="wallet-option-name">{wallet.name}</span>
+                        <span className="wallet-option-sub">
+                          {installed ? "Ready to connect" : wallet.description}
+                        </span>
+                      </span>
                     <span className={`wallet-option-badge${installed ? "" : " muted"}`}>
                       {installed ? "Installed" : "Not detected"}
                     </span>
                   </button>
                 );
               })}
+              {filteredWalletOptions.length === 0 && (
+                <p className="wallet-picker-empty">No matching wallet was detected.</p>
+              )}
             </div>
+            <p className="wallet-picker-footer">Supported browser wallets are detected automatically and connect directly.</p>
           </section>
         </div>
       )}
