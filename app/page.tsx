@@ -1,3 +1,4 @@
+import LimitedTokenInsights from "./LimitedTokenInsights";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createPublicClient,
@@ -310,6 +311,114 @@ const walletCatalog: WalletOption[] = [
 const walletPreferenceStorageKey = "limited-exchange.wallet-provider";
 const liveStatsPollingInterval = 4_000;
 
+// The original tokens run reflection and dividend loops inside every transfer, so the
+// same exchange can cost two to three times more gas in one block than in the next.
+// A wallet estimate taken seconds before the trade mines is routinely too low, and the
+// shortfall surfaces as an out-of-gas revert inside the PulseX router rather than as a
+// readable error. Unused gas is refunded, so padding the limit only raises the balance
+// the wallet checks upfront - it does not raise the fee the trade actually costs.
+const exchangeGasMultiplier = 3n;
+const exchangeGasFloor = 4_000_000n;
+const exchangeGasCeiling = 20_000_000n; // PulseChain blocks allow 45,000,000
+const approvalGasMultiplier = 2n;
+const approvalGasFloor = 400_000n;
+
+// Every revert the exchange can produce, keyed by its four-byte selector. The exchange
+// ABIs above carry only functions, so viem cannot name these on its own and the raw
+// selector is all that reaches the browser. Anything marked retryable is a transient
+// PulseChain condition rather than a problem with what the user asked for.
+const exchangeRevertReasons: Record<string, { retryable: boolean; describe: (pair: Pair) => string }> = {
+  // ExactOriginalRequired - the originals pay holders passively, so the exchange balance
+  // can tick up mid-trade and the deployed contract rejects the whole exchange.
+  "0x3c5583b1": { retryable: true, describe: () => "PulseChain credited reflection dust in the middle of the trade, so the exchange turned it down. Nothing was spent - press Try again." },
+  // ExactBurnRequired
+  "0x538c0ddb": { retryable: true, describe: (pair) => `The ${pair.burn} burn settled at a different size than expected. Nothing was spent - press Try again.` },
+  // InvalidSupplyChange
+  "0x09b0df66": { retryable: true, describe: (pair) => `${pair.burn} supply moved while the trade was being built. Nothing was spent - press Try again.` },
+  // RouterDidNotUseFullAllowance
+  "0x81397d17": { retryable: true, describe: () => "PulseX did not take the full swap amount. Nothing was spent - press Try again." },
+  // PlsTreasuryShortfall
+  "0x780a55f6": { retryable: true, describe: () => "The PulseX price moved while you were confirming. Nothing was spent - press Try again." },
+  // ExactMintRequired
+  "0x4a4e295d": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected amount. Nothing was spent - press Try again.` },
+  // ExactMintSupplyRequired
+  "0x88b5d27e": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected supply. Nothing was spent - press Try again.` },
+  // ZeroMinimumOutput
+  "0x501e45b2": { retryable: true, describe: () => "The PulseX quote came back empty. Give it a moment and press Try again." },
+  // ERC20InsufficientAllowance
+  "0xfb8f41b2": { retryable: true, describe: (pair) => `The ${pair.burn} approval has not landed yet. Give it a few seconds and press Try again.` },
+  // ExchangeIsNotMinter
+  "0x0af46499": { retryable: false, describe: (pair) => `The ${pair.receive} creator must set its minter to this exchange contract first.` },
+  // EnforcedPause
+  "0xd93c0665": { retryable: false, describe: (pair) => `The ${pair.receive} exchange is temporarily paused.` },
+  // AmountTooSmall
+  "0xc2f5625a": { retryable: false, describe: () => "That amount is too small to split across the burn, the swap and the management mint." },
+  // ZeroAmount
+  "0x1f2a2005": { retryable: false, describe: () => "Enter an amount greater than zero." },
+};
+
+/// Walks the cause chain of a viem or wallet error looking for a selector we recognise.
+function revertSelector(error: unknown) {
+  const seen: string[] = [];
+  let current: unknown = error;
+  for (let depth = 0; current != null && depth < 12; depth += 1) {
+    if (typeof current === "string") {
+      seen.push(current);
+      break;
+    }
+    if (typeof current !== "object") break;
+    const record = current as Record<string, unknown>;
+    for (const key of ["message", "shortMessage", "details", "reason", "data"]) {
+      const value = record[key];
+      if (typeof value === "string") seen.push(value);
+      else if (value && typeof value === "object") {
+        const nested = (value as { data?: unknown }).data;
+        if (typeof nested === "string") seen.push(nested);
+      }
+    }
+    current = record.cause;
+  }
+  const blob = seen.join(" ");
+  return Object.keys(exchangeRevertReasons).find((selector) => blob.includes(selector));
+}
+
+function isKnownRevert(error: unknown) {
+  return revertSelector(error) !== undefined;
+}
+
+function describeExchangeFailure(error: unknown, pair: Pair) {
+  const selector = revertSelector(error);
+  if (!selector) return null;
+  const reason = exchangeRevertReasons[selector];
+  return { message: reason.describe(pair), retryable: reason.retryable };
+}
+
+function isWalletRejection(error: unknown) {
+  if ((error as { code?: number } | null)?.code === 4001) return true;
+  const message = error instanceof Error ? error.message : "";
+  return /user rejected|user denied|rejected the request/i.test(message);
+}
+
+async function gasWithHeadroom(
+  estimate: () => Promise<bigint>,
+  multiplier: bigint,
+  floor: bigint,
+) {
+  let limit = floor;
+  try {
+    limit = (await estimate()) * multiplier;
+  } catch (error) {
+    // This estimate doubles as a dry run. A revert we recognise means the trade cannot
+    // succeed against current state, so let it through rather than asking the user to
+    // sign and pay for a transaction that is already known to fail.
+    if (isKnownRevert(error)) throw error;
+    // Anything else - a flaky RPC, a node that refuses to simulate - is not evidence
+    // the trade is bad, so fall back to the floor and let the wallet decide.
+  }
+  if (limit < floor) limit = floor;
+  return limit > exchangeGasCeiling ? exchangeGasCeiling : limit;
+}
+
 const pairs: Pair[] = [
   { key: "cashx", burn: "CashX", receive: "LCASHX", label: "Limited CashX", logo: publicAsset("tokens/cashx.png"), receiveLogo: publicAsset("tokens/lcashx.png"), decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: "0x57cBC908078b291117242385Fe7C0cf3582fA460", exchangeAddress: "0x4E4375142e847eC7212EFEACA956B7b4936D4400", mintOnDemand: true, swapToPls: true },
   { key: "distrox", burn: "DistroX", receive: "LdistroX", label: "Limited DistributionX", logo: publicAsset("tokens/distrox.jpg"), receiveLogo: publicAsset("tokens/ldistrox.png"), decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: "0xfC961146971679Cc4E731F60D72B60eb3dd8b036", exchangeAddress: "0x23321FaCb12B5eA17D9caAd48B8e406ad82A0532", mintOnDemand: true, swapToPls: true },
@@ -526,6 +635,7 @@ export default function Home() {
   const [exchangePaused, setExchangePaused] = useState(false);
   const [stats, setStats] = useState<PoolStats>(emptyStats);
   const [transactionStage, setTransactionStage] = useState<TransactionStage>("ready");
+  const [retryable, setRetryable] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const [copiedAddress, setCopiedAddress] = useState<Address | null>(null);
   const [selectorOpen, setSelectorOpen] = useState(false);
@@ -564,6 +674,7 @@ export default function Home() {
     setExchangeActivated(false);
     setExchangePaused(false);
     setTransactionStage("ready");
+    setRetryable(false);
     setSelectorOpen(false);
     setQuickSelectorOpen(false);
     setStatus("");
@@ -1038,6 +1149,7 @@ export default function Home() {
     let approvalComplete = false;
     try {
       setBusy(true);
+      setRetryable(false);
       setTransactionStage("approving");
       const value = parseUnits(amount, pair.decimals);
       if (value <= 0n) throw new Error("Enter an amount greater than zero");
@@ -1055,11 +1167,24 @@ export default function Home() {
 
       if (allowance < value) {
         setStatus(`Approve ${pair.burn} in your wallet`);
+        const approvalGas = await gasWithHeadroom(
+          () =>
+            publicClient.estimateContractGas({
+              account,
+              address: pair.burnAddress,
+              abi: erc20Abi,
+              functionName: "approve",
+              args: [pair.exchangeAddress, value],
+            }),
+          approvalGasMultiplier,
+          approvalGasFloor,
+        );
         const approvalHash = await wallet.writeContract({
           address: pair.burnAddress,
           abi: erc20Abi,
           functionName: "approve",
           args: [pair.exchangeAddress, value],
+          gas: approvalGas,
         });
         setStatus("Approval submitted — waiting for confirmation");
         await waitForPulseChainReceipt(approvalHash, walletProvider);
@@ -1081,19 +1206,46 @@ export default function Home() {
         });
         const minPlsOut = expectedPlsOut * 85n / 100n;
         if (minPlsOut <= 0n) throw new Error("The PulseX output quote is too small");
+        const swapGas = await gasWithHeadroom(
+          () =>
+            publicClient.estimateContractGas({
+              account,
+              address: pair.exchangeAddress,
+              abi: swapBurnMintExchangeAbi,
+              functionName: "burnAndMint",
+              args: [value, minPlsOut],
+            }),
+          exchangeGasMultiplier,
+          exchangeGasFloor,
+        );
         setStatus(`Confirm the 1:1 ${pair.burn} burn and mint in your wallet`);
         hash = await wallet.writeContract({
           address: pair.exchangeAddress,
           abi: swapBurnMintExchangeAbi,
           functionName: "burnAndMint",
           args: [value, minPlsOut],
+          gas: swapGas,
         });
       } else {
+        const exchangeFunction = pair.mintOnDemand ? "burnAndMint" : "burnAndClaim";
+        const exchangeGas = await gasWithHeadroom(
+          () =>
+            publicClient.estimateContractGas({
+              account,
+              address: pair.exchangeAddress,
+              abi: burnExchangeAbi,
+              functionName: exchangeFunction,
+              args: [value],
+            }),
+          exchangeGasMultiplier,
+          exchangeGasFloor,
+        );
         hash = await wallet.writeContract({
           address: pair.exchangeAddress,
           abi: burnExchangeAbi,
-          functionName: pair.mintOnDemand ? "burnAndMint" : "burnAndClaim",
+          functionName: exchangeFunction,
           args: [value],
+          gas: exchangeGas,
         });
       }
       setStatus("Trade submitted — waiting for PulseChain confirmation");
@@ -1104,11 +1256,42 @@ export default function Home() {
       setStatus(`Trade confirmed — ${pair.receive} minted successfully`);
     } catch (error) {
       setTransactionStage(approvalComplete ? "exchanging" : "ready");
-      setStatus(error instanceof Error ? error.message : "Transaction cancelled");
+      if (isWalletRejection(error)) {
+        setStatus("Transaction cancelled in your wallet");
+        return;
+      }
+      const failure = describeExchangeFailure(error, pair);
+      if (failure) {
+        setRetryable(failure.retryable);
+        setStatus(failure.message);
+        return;
+      }
+      // A revert that only surfaces once the trade is mined has already moved past the
+      // dry run above, which on these originals means transient chain state.
+      if (error instanceof Error && error.message === "The transaction reverted") {
+        setRetryable(true);
+        setStatus("PulseChain rejected the trade as it settled. Press Try again.");
+        return;
+      }
+      setStatus(error instanceof Error ? error.message : "Transaction failed");
     } finally {
       setBusy(false);
     }
   }
+
+  const exchangeButtonLabel = busy
+    ? "Waiting for confirmation…"
+    : !configured
+      ? `Awaiting ${pair.receive} contract`
+      : !exchangeActivated
+        ? `Awaiting ${pair.receive} minter activation`
+        : exchangePaused
+          ? `${pair.receive} exchange paused`
+          : !account
+            ? "Connect wallet to continue"
+            : retryable
+              ? `Try again — burn ${pair.burn} & mint ${pair.receive}`
+              : `Burn ${pair.burn} & mint ${pair.receive}`;
 
   return (
     <main className="site-shell">
@@ -1341,17 +1524,7 @@ export default function Home() {
           </div>
 
           <button className="quick-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured || !exchangeActivated || exchangePaused}>
-            {busy
-              ? "Waiting for confirmation…"
-              : !configured
-                ? `Awaiting ${pair.receive} contract`
-                : !exchangeActivated
-                  ? `Awaiting ${pair.receive} minter activation`
-                  : exchangePaused
-                    ? `${pair.receive} exchange paused`
-                    : account
-                      ? `Burn ${pair.burn} & mint ${pair.receive}`
-                      : "Connect wallet to continue"}
+            {exchangeButtonLabel}
           </button>
           <TransactionProgress stage={transactionStage} pair={pair} />
         </article>
@@ -1467,17 +1640,7 @@ export default function Home() {
             </div>
 
             <button className="quick-exchange-button main-exchange-button" type="button" onClick={burnAndClaim} disabled={busy || !configured || !exchangeActivated || exchangePaused}>
-              {busy
-                ? "Waiting for confirmation…"
-                : !configured
-                  ? `Awaiting ${pair.receive} contract`
-                  : !exchangeActivated
-                    ? `Awaiting ${pair.receive} minter activation`
-                    : exchangePaused
-                      ? `${pair.receive} exchange paused`
-                      : account
-                        ? `Burn ${pair.burn} & mint ${pair.receive}`
-                        : "Connect wallet to continue"}
+              {exchangeButtonLabel}
             </button>
             <TransactionProgress stage={transactionStage} pair={pair} />
             {status && <p className="status-line" role="status">{status}</p>}
