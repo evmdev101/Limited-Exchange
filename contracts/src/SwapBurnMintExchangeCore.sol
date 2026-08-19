@@ -228,6 +228,15 @@ abstract contract SwapBurnMintExchangeCore is Ownable, Pausable, ReentrancyGuard
         burnToken.safeTransferFrom(account, address(this), amount);
         uint256 exchangeBalanceAfter = burnToken.balanceOf(address(this));
         uint256 received = exchangeBalanceAfter - exchangeBalanceBefore;
+        // KNOWN ISSUE - left as-is because this contract is already deployed.
+        // The reflection originals recompute balanceOf against a rate that moves on
+        // every transfer, so this balance can come back a few thousand wei above
+        // `amount` and the exact match below rejects an otherwise valid exchange.
+        // Seen intermittently on DivX and GSX. The fix is `received < amount`, which
+        // is safe because the swap only ever approves and sells exactly `amount` -
+        // but it needs a redeploy plus a minter rotation, so it is not applied here.
+        // Until then the website dry-runs each trade and offers a retry, so hitting
+        // this costs the user nothing.
         if (received != amount) revert ExactOriginalRequired(amount, received);
 
         burnToken.forceApprove(address(pulseXRouter), amount);
