@@ -1,4 +1,5 @@
-import LimitedTokenInsights from "./LimitedTokenInsights";
+import LimitedTokenInsights, { type LimitedTokenInsightView } from "./LimitedTokenInsights";
+import LimitedFarms from "./LimitedFarms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   createPublicClient,
@@ -237,6 +238,8 @@ type PoolStats = {
 };
 
 type TransactionStage = "ready" | "approving" | "exchanging" | "confirmed";
+type SiteView = "exchange" | "farms";
+type MintSectionView = "mint" | LimitedTokenInsightView;
 
 type BrowserWalletProvider = EIP1193Provider & {
   providers?: BrowserWalletProvider[];
@@ -623,7 +626,9 @@ function TransactionProgress({
 }
 
 export default function Home() {
+  const [activeView, setActiveView] = useState<SiteView>("exchange");
   const [activeKey, setActiveKey] = useState("cashx");
+  const [mintSectionViews, setMintSectionViews] = useState<Record<string, MintSectionView>>({});
   const [account, setAccount] = useState<Address | null>(null);
   const [amount, setAmount] = useState("");
   const [reserve, setReserve] = useState<bigint>(0n);
@@ -654,6 +659,7 @@ export default function Home() {
     () => pairs.find((item) => item.key === activeKey) ?? pairs[0],
     [activeKey],
   );
+  const mintSectionView = mintSectionViews[activeKey] ?? "mint";
   const configured = pair.exchangeAddress !== zeroAddress;
   const filteredWalletOptions = useMemo(() => {
     const query = walletSearch.trim().toLowerCase();
@@ -662,6 +668,17 @@ export default function Home() {
       `${wallet.name} ${wallet.description}`.toLowerCase().includes(query),
     );
   }, [walletOptions, walletSearch]);
+
+  useEffect(() => {
+    const syncViewFromHash = () => {
+      const hash = window.location.hash.toLowerCase();
+      setActiveView(hash === "#farms" || hash.startsWith("#limited-farm-") ? "farms" : "exchange");
+    };
+
+    syncViewFromHash();
+    window.addEventListener("hashchange", syncViewFromHash);
+    return () => window.removeEventListener("hashchange", syncViewFromHash);
+  }, []);
 
   function selectPair(key: string) {
     const nextPair = pairs.find((item) => item.key === key) ?? pairs[0];
@@ -1320,7 +1337,22 @@ export default function Home() {
           </a>
         </div>
         <nav className="nav-center" aria-label="Primary navigation">
-          <a className="nav-tab active" href="#pools" aria-current="page">Burn Exchange</a>
+          <a
+            className={`nav-tab${activeView === "exchange" ? " active" : ""}`}
+            href="#pools"
+            aria-current={activeView === "exchange" ? "page" : undefined}
+            onClick={() => setActiveView("exchange")}
+          >
+            Mint
+          </a>
+          <a
+            className={`nav-tab${activeView === "farms" ? " active" : ""}`}
+            href="#farms"
+            aria-current={activeView === "farms" ? "page" : undefined}
+            onClick={() => setActiveView("farms")}
+          >
+            Farms
+          </a>
         </nav>
         <div className="nav-actions">
           <ThemePicker />
@@ -1425,6 +1457,8 @@ export default function Home() {
         </div>
       )}
 
+      {activeView === "exchange" ? (
+        <>
       <section className="hero" id="top">
         <div className="hero-copy">
           <h1>Burn the original<br /><em>Mint the limited</em></h1>
@@ -1546,7 +1580,23 @@ export default function Home() {
           ))}
         </div>
 
-        <div className="exchange-grid">
+        <div className="mint-section-tabs" role="tablist" aria-label={`${pair.receive} information`}>
+          {(["mint", "holders", "activity"] as const).map((view) => (
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mintSectionView === view}
+              className={mintSectionView === view ? "active" : ""}
+              key={view}
+              onClick={() => setMintSectionViews((current) => ({ ...current, [activeKey]: view }))}
+            >
+              {view[0].toUpperCase()}{view.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        {mintSectionView === "mint" ? (
+          <div className="exchange-grid" role="tabpanel" aria-label={`${pair.receive} mint`}>
           <article className="exchange-card">
             <div className="quick-card-heading">
               <h2>Mint {pair.label}</h2>
@@ -1735,7 +1785,20 @@ export default function Home() {
             </details>
 
           </section>
-        </div>
+          </div>
+        ) : (
+          <LimitedTokenInsights
+            token={{
+              key: pair.key,
+              name: pair.label,
+              symbol: pair.receive,
+              address: pair.receiveAddress,
+              logo: pair.receiveLogo,
+              decimals: pair.decimals,
+            }}
+            view={mintSectionView}
+          />
+        )}
       </section>
 
       <section className="how-section" id="how">
@@ -1779,7 +1842,14 @@ export default function Home() {
           </details>
         </div>
       </section>
-
+        </>
+      ) : (
+        <LimitedFarms
+          account={account}
+          provider={walletProvider}
+          onConnect={() => { void handleWalletButton(); }}
+        />
+      )}
     </main>
   );
 }
