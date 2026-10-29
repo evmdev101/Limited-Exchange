@@ -333,19 +333,22 @@ const approvalGasFloor = 400_000n;
 const exchangeRevertReasons: Record<string, { retryable: boolean; describe: (pair: Pair) => string }> = {
   // ExactOriginalRequired - the originals pay holders passively, so the exchange balance
   // can tick up mid-trade and the deployed contract rejects the whole exchange.
-  "0x3c5583b1": { retryable: true, describe: () => "PulseChain credited reflection dust in the middle of the trade, so the exchange turned it down. Nothing was spent - press Try again." },
+  "0x3c5583b1": { retryable: true, describe: () => "PulseChain credited reflection dust in the middle of the trade, so the exchange turned it down. No tokens were exchanged - press Try again." },
   // ExactBurnRequired
-  "0x538c0ddb": { retryable: true, describe: (pair) => `The ${pair.burn} burn settled at a different size than expected. Nothing was spent - press Try again.` },
+  "0x538c0ddb": { retryable: true, describe: (pair) => `The ${pair.burn} burn settled at a different size than expected. No tokens were exchanged - press Try again.` },
   // InvalidSupplyChange
-  "0x09b0df66": { retryable: true, describe: (pair) => `${pair.burn} supply moved while the trade was being built. Nothing was spent - press Try again.` },
+  "0x09b0df66": { retryable: true, describe: (pair) => `${pair.burn} supply moved while the trade was being built. No tokens were exchanged - press Try again.` },
   // RouterDidNotUseFullAllowance
-  "0x81397d17": { retryable: true, describe: () => "PulseX did not take the full swap amount. Nothing was spent - press Try again." },
+  "0x81397d17": { retryable: true, describe: () => "PulseX did not take the full swap amount. No tokens were exchanged - press Try again." },
+  // RouterDidNotSpendExactOriginal - the migrated exchanges use the older
+  // balance check, which can reject harmless reflection dust after the swap.
+  "0x3848b495": { retryable: true, describe: () => "The token balance changed during the PulseX swap, so the exchange was cancelled. No tokens were exchanged - press Try again." },
   // PlsTreasuryShortfall
-  "0x780a55f6": { retryable: true, describe: () => "The PulseX price moved while you were confirming. Nothing was spent - press Try again." },
+  "0x780a55f6": { retryable: true, describe: () => "The PulseX price moved while you were confirming. No tokens were exchanged - press Try again." },
   // ExactMintRequired
-  "0x4a4e295d": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected amount. Nothing was spent - press Try again.` },
+  "0x4a4e295d": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected amount. No tokens were exchanged - press Try again.` },
   // ExactMintSupplyRequired
-  "0x88b5d27e": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected supply. Nothing was spent - press Try again.` },
+  "0x88b5d27e": { retryable: true, describe: (pair) => `The ${pair.receive} mint returned an unexpected supply. No tokens were exchanged - press Try again.` },
   // ZeroMinimumOutput
   "0x501e45b2": { retryable: true, describe: () => "The PulseX quote came back empty. Give it a moment and press Try again." },
   // ERC20InsufficientAllowance
@@ -423,10 +426,10 @@ async function gasWithHeadroom(
 }
 
 const pairs: Pair[] = [
-  { key: "cashx", burn: "CashX", receive: "LCASHX", label: "Limited CashX", logo: publicAsset("tokens/cashx.png"), receiveLogo: publicAsset("tokens/lcashx.png"), decimals: 18, burnAddress: "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", receiveAddress: "0x57cBC908078b291117242385Fe7C0cf3582fA460", exchangeAddress: "0x4E4375142e847eC7212EFEACA956B7b4936D4400", mintOnDemand: true, swapToPls: true },
-  { key: "distrox", burn: "DistroX", receive: "LdistroX", label: "Limited DistributionX", logo: publicAsset("tokens/distrox.jpg"), receiveLogo: publicAsset("tokens/ldistrox.png"), decimals: 18, burnAddress: "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", receiveAddress: "0xfC961146971679Cc4E731F60D72B60eb3dd8b036", exchangeAddress: "0x23321FaCb12B5eA17D9caAd48B8e406ad82A0532", mintOnDemand: true, swapToPls: true },
-  { key: "divx", burn: "DivX", receive: "LDIVX", label: "Limited DividendX", logo: publicAsset("tokens/divx.png"), receiveLogo: publicAsset("tokens/ldivx.png"), decimals: 18, burnAddress: "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", receiveAddress: "0x8DbD0923c0c2dd4973806B655036251610aE11BC", exchangeAddress: "0xf71624352eDb44f6e622d1e518C6308e6d5dE9Fc", mintOnDemand: true, swapToPls: true },
-  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited Grand SlamX", logo: publicAsset("tokens/gsx.png"), receiveLogo: publicAsset("tokens/lgsx.png"), decimals: 18, burnAddress: "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", receiveAddress: "0xCc6A42F028905096c76E5631aed78e20f5CDDFBa", exchangeAddress: "0xfe4fF21dD40642dAdbCaD41CC83A9FbC2cC32477", mintOnDemand: true, swapToPls: true },
+  { key: "cashx", burn: "CashX", receive: "LCASHX", label: "Limited CashX", logo: publicAsset("tokens/cashx.png"), receiveLogo: publicAsset("tokens/lcashx.png"), decimals: 18, burnAddress: "0x510c547318032275e41D1362A465783320d8152f", receiveAddress: "0x57cBC908078b291117242385Fe7C0cf3582fA460", exchangeAddress: "0xE346B08433BE131A7964a7e1F46c6fC28eC69003", mintOnDemand: true, swapToPls: true },
+  { key: "distrox", burn: "DistroX", receive: "LdistroX", label: "Limited DistributionX", logo: publicAsset("tokens/distrox.jpg"), receiveLogo: publicAsset("tokens/ldistrox.png"), decimals: 18, burnAddress: "0xec03E43e21B337F60F6a63944bC7b61B531c035F", receiveAddress: "0xfC961146971679Cc4E731F60D72B60eb3dd8b036", exchangeAddress: "0x3EbC49f2e89260655D957774E73440e20e942934", mintOnDemand: true, swapToPls: true },
+  { key: "divx", burn: "DivX", receive: "LDIVX", label: "Limited DividendX", logo: publicAsset("tokens/divx.png"), receiveLogo: publicAsset("tokens/ldivx.png"), decimals: 18, burnAddress: "0xB528AFfc72Dfc7Da5d3184C4e233Fc9fc156c4E0", receiveAddress: "0x8DbD0923c0c2dd4973806B655036251610aE11BC", exchangeAddress: "0x2b199B79E84f74e06c1E08baf92249Be4003EBa0", mintOnDemand: true, swapToPls: true },
+  { key: "gsx", burn: "GSX", receive: "LGSX", label: "Limited Grand SlamX", logo: publicAsset("tokens/gsx.png"), receiveLogo: publicAsset("tokens/lgsx.png"), decimals: 18, burnAddress: "0xFA490c52FD934c7b8629E30Ea4c14683ee000b5d", receiveAddress: "0xCc6A42F028905096c76E5631aed78e20f5CDDFBa", exchangeAddress: "0x9548c4b026b5B4026C60edd39D17D72EABa97093", mintOnDemand: true, swapToPls: true },
 ];
 
 const burnSink: Address = "0x000000000000000000000000000000000000dEaD";
@@ -626,7 +629,10 @@ function TransactionProgress({
 }
 
 export default function Home() {
-  const [activeView, setActiveView] = useState<SiteView>("exchange");
+  const [activeView, setActiveView] = useState<SiteView>(() => {
+    const hash = window.location.hash.toLowerCase();
+    return hash === "#farms" || hash.startsWith("#limited-farm-") ? "farms" : "exchange";
+  });
   const [activeKey, setActiveKey] = useState("cashx");
   const [mintSectionViews, setMintSectionViews] = useState<Record<string, MintSectionView>>({});
   const [account, setAccount] = useState<Address | null>(null);
@@ -1693,7 +1699,7 @@ export default function Home() {
               {exchangeButtonLabel}
             </button>
             <TransactionProgress stage={transactionStage} pair={pair} />
-            {status && <p className="status-line" role="status">{status}</p>}
+            <p className="status-line" role="status">{status}</p>
           </article>
 
           <section className="below-card-details" aria-label={`${pair.burn} pool details`}>

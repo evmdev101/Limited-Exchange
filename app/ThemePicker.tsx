@@ -116,6 +116,11 @@ function displayName(name: string) {
 function applyColors(colors: ThemeColors) {
   const style = document.documentElement.style;
   Object.entries(colors).forEach(([key, value]) => style.setProperty(`--${key}`, value));
+  const rgb = /^#([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i.exec(colors.bg);
+  if (rgb) {
+    const brightness = parseInt(rgb[1], 16) * 299 + parseInt(rgb[2], 16) * 587 + parseInt(rgb[3], 16) * 114;
+    style.colorScheme = brightness >= 128000 ? "light" : "dark";
+  }
 }
 
 function applyBackground(settings: BackgroundSettings) {

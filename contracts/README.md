@@ -2,6 +2,11 @@
 
 The production system uses four separate contracts. Every contract is permanently locked to one original token and one matching Limited token.
 
+The original tokens have migrated. Current original-token and exchange addresses
+are recorded in `deployment/pulsechain-pools.json`. The sources and artifacts in
+this folder describe the legacy deployments below; do not redeploy them as the
+current migrated contracts. The website uses the active deployments listed next.
+
 | Deployable contract | Original token | Limited token |
 | --- | --- | --- |
 | `CashXLCashXMintExchange` | CashX `0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665` | LCashX `0x57cBC908078b291117242385Fe7C0cf3582fA460` |
@@ -9,16 +14,20 @@ The production system uses four separate contracts. Every contract is permanentl
 | `DivXLDivXMintExchange` | DivX `0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3` | LDivX `0x8DbD0923c0c2dd4973806B655036251610aE11BC` |
 | `GSXLGSXMintExchange` | GSX `0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e` | LGSX `0xCc6A42F028905096c76E5631aed78e20f5CDDFBa` |
 
-## PulseChain deployments
+## Active PulseChain deployments after original-token migration
 
 | Pair | Exchange address |
 | --- | --- |
-| CashX → LCashX | `0x4E4375142e847eC7212EFEACA956B7b4936D4400` |
-| DistroX → LDistroX | `0x23321FaCb12B5eA17D9caAd48B8e406ad82A0532` |
-| DivX → LDivX | `0xf71624352eDb44f6e622d1e518C6308e6d5dE9Fc` |
-| GSX → LGSX | `0xfe4fF21dD40642dAdbCaD41CC83A9FbC2cC32477` |
+| CashX → LCashX | `0xE346B08433BE131A7964a7e1F46c6fC28eC69003` |
+| DistroX → LDistroX | `0x3EbC49f2e89260655D957774E73440e20e942934` |
+| DivX → LDivX | `0x2b199B79E84f74e06c1E08baf92249Be4003EBa0` |
+| GSX → LGSX | `0x9548c4b026b5B4026C60edd39D17D72EABa97093` |
 
-These deployments use the replacement Limited tokens and the reflection-dust-safe swap check. Previous exchange contracts are retired and must not be reused.
+These deployments accept the migrated original tokens and are the current
+minters of the existing Limited tokens. Previous exchange contracts are retired
+and must not be reused. The notes below document the legacy contract logic;
+verify the deployed replacement implementation before using its behavior as a
+deployment reference.
 
 All four inherit `SwapBurnMintExchangeCore.sol`. That file contains the shared production logic and is not deployed by itself.
 

@@ -45,7 +45,8 @@ The site will be available at:
 
 ## Contract status
 
-The original token addresses are configured in `app/page.tsx`. Limited-token
-and burn-exchange addresses remain intentionally unset until those contracts
-are deployed. When the addresses are available, update the matching pair in
-`app/page.tsx`, test locally, then push the update.
+The migrated original tokens and active burn exchanges are recorded in
+`contracts/deployment/pulsechain-pools.json` and configured in `app/page.tsx`.
+The Limited-token addresses remain unchanged. Run
+`pnpm contracts:check-production` to verify token pairs, minter authority, and
+exchange settings against PulseChain before publishing an address update.

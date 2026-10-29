@@ -271,25 +271,25 @@ const token = (symbol: string, address: Address, logo: string): FarmToken => ({
 });
 
 const TOKENS = {
-  cashx: token("CASHX", "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665", publicAsset("tokens/cashx.png")),
+  cashx: token("CASHX", "0x510c547318032275e41D1362A465783320d8152f", publicAsset("tokens/cashx.png")),
   lcashx: token("LCASHX", "0x57cBC908078b291117242385Fe7C0cf3582fA460", publicAsset("tokens/lcashx.png")),
-  distrox: token("DISTROX", "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03", publicAsset("tokens/distrox.jpg")),
+  distrox: token("DISTROX", "0xec03E43e21B337F60F6a63944bC7b61B531c035F", publicAsset("tokens/distrox.jpg")),
   ldistrox: token("LDISTROX", "0xfC961146971679Cc4E731F60D72B60eb3dd8b036", publicAsset("tokens/ldistrox.png")),
-  divx: token("DIVX", "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3", publicAsset("tokens/divx.png")),
+  divx: token("DIVX", "0xB528AFfc72Dfc7Da5d3184C4e233Fc9fc156c4E0", publicAsset("tokens/divx.png")),
   ldivx: token("LDIVX", "0x8DbD0923c0c2dd4973806B655036251610aE11BC", publicAsset("tokens/ldivx.png")),
-  gsx: token("GSX", "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e", publicAsset("tokens/gsx.png")),
+  gsx: token("GSX", "0xFA490c52FD934c7b8629E30Ea4c14683ee000b5d", publicAsset("tokens/gsx.png")),
   lgsx: token("LGSX", "0xCc6A42F028905096c76E5631aed78e20f5CDDFBa", publicAsset("tokens/lgsx.png")),
   wpls: token("WPLS", "0xA1077a294DDE1B09BB078844DF40758a5D0f9a27", WPLS_LOGO),
 } as const;
 
 const FARMS: FarmConfig[] = [
-  { id: 277, pid: 92, lp: "0x63aEDb300849581029d6d5A7B63Ac3C809c362BB", tokens: [TOKENS.gsx, TOKENS.lgsx] },
+  { id: 277, pid: 92, lp: "0x01AaddD156392fE811FdAE236f2d4341b6a7f129", tokens: [TOKENS.gsx, TOKENS.lgsx] },
   { id: 276, pid: 91, lp: "0xbF5B80f368d8563A7ae3d8c2c481770F4d236e3a", tokens: [TOKENS.wpls, TOKENS.lgsx] },
-  { id: 275, pid: 90, lp: "0x68AaaBABF33EFcC16b2f18251e2dB7e50A103272", tokens: [TOKENS.divx, TOKENS.ldivx] },
+  { id: 275, pid: 90, lp: "0x4333B9fD8e4C33BB373F94e95b6Bbf9e84273fA0", tokens: [TOKENS.divx, TOKENS.ldivx] },
   { id: 274, pid: 89, lp: "0x33692D8679b3F9c2bd5Ac28d7D3A25F677eCB68A", tokens: [TOKENS.ldivx, TOKENS.wpls] },
-  { id: 273, pid: 88, lp: "0x35b7F3c964a47Ff273ffa916756c95bD9662556E", tokens: [TOKENS.distrox, TOKENS.ldistrox] },
+  { id: 273, pid: 88, lp: "0xeEf1dBd3Bd19859CbfB9e330A5B3FC1Fd0df2294", tokens: [TOKENS.distrox, TOKENS.ldistrox] },
   { id: 272, pid: 87, lp: "0x6955f02Bd012f6cFF0e5030ac5D123785C6b66FC", tokens: [TOKENS.wpls, TOKENS.ldistrox] },
-  { id: 271, pid: 86, lp: "0xe9fF1b8bd6f54b37BA0C104539C88592805Be15F", tokens: [TOKENS.cashx, TOKENS.lcashx] },
+  { id: 271, pid: 86, lp: "0x4c2336077207f06c890a7eb92346D59e40abFc09", tokens: [TOKENS.cashx, TOKENS.lcashx] },
   { id: 270, pid: 85, lp: "0x207c74d16D659C9627142bf5178aaB6DFb813657", tokens: [TOKENS.lcashx, TOKENS.wpls] },
 ];
 
@@ -385,14 +385,17 @@ export default function LimitedFarms({ account, provider, onConnect }: LimitedFa
           }) as Promise<PoolInfo>),
         );
 
+        // Farm IDs survive LP migrations; always use the LP currently held by the pool.
+        const resolvedFarms = FARMS.map((farm, index) => ({ ...farm, lp: pools[index][0] }));
+
         const lpPrices = await publicClient.readContract({
           address: PRICE_CALCULATOR,
           abi: priceAbi,
           functionName: "getBatchLpValue",
-          args: [FARMS.map((farm) => farm.lp)],
+          args: [resolvedFarms.map((farm) => farm.lp)],
         });
 
-        const lpDetails = await Promise.all(FARMS.map(async (farm) => {
+        const lpDetails = await Promise.all(resolvedFarms.map(async (farm) => {
           const [token0Address, reserves, totalSupply] = await Promise.all([
             publicClient.readContract({ address: farm.lp, abi: lpPairAbi, functionName: "token0" }),
             publicClient.readContract({ address: farm.lp, abi: lpPairAbi, functionName: "getReserves" }),
@@ -425,7 +428,7 @@ export default function LimitedFarms({ account, provider, onConnect }: LimitedFa
         ]));
 
         const now = BigInt(Math.floor(Date.now() / 1000));
-        const live = await Promise.all(FARMS.map(async (config, index): Promise<FarmLive> => {
+        const live = await Promise.all(resolvedFarms.map(async (config, index): Promise<FarmLive> => {
           const pool = pools[index];
           const reward = rewardMap.get(pool[1].toLowerCase());
           const lpDetail = lpDetails[index];

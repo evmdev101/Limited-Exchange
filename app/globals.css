@@ -1,12 +1,12 @@
 :root {
   --font-geist-sans: "Geist";
   --font-geist-mono: "Geist Mono";
-  /* cashmoney-mint/src/themes.js — original (dark) theme */
-  --bg: #282c34;
-  --fg: #9cdef2;
-  --panel: #111111;
-  --border: #355a66;
-  --red: #e06c75;
+  /* Match ThemePicker's default midnight palette on the first paint. */
+  --bg: #0d1117;
+  --fg: #c9d1d9;
+  --panel: #161b22;
+  --border: #30363d;
+  --red: #f85149;
   --bg-effect-color: var(--fg);
   --bg-effect-intensity: 1;
   --bg-effect-size: 1;
@@ -21,7 +21,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html { scroll-behavior: smooth; background: var(--bg); }
 body {
   margin: 0;
   background: var(--ink);
@@ -998,3 +998,33 @@ body.bg-pattern-synapse {
 @media (prefers-reduced-motion: reduce) {
   .th-cursor, .th-modal-group, .th-zone { animation: none !important; }
 }
+
+/* Keep the page steady while balances, fonts, and transaction state load. */
+html { scrollbar-gutter: stable; }
+.quick-field-label { min-height: 24px; }
+.quick-field-label > small,
+.quick-field-actions small {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.quick-field-actions { min-width: 0; }
+.quick-token-trigger, .quick-token-locked { flex-shrink: 0; }
+.quick-field-row { min-height: 50px; }
+.quick-field > small { line-height: 1.5; }
+.quick-field > small:last-child { min-height: 36px; }
+.quick-receive-field strong { white-space: nowrap; }
+.wallet-button { min-width: 150px; white-space: nowrap; }
+.exchange-card .status-line {
+  min-height: 48px;
+  margin-bottom: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+/* Feedback changes color without moving the surrounding controls. */
+.site-shell .exchange-card,
+.site-shell .stat-rolling-value.rolling { animation: none; }
+.site-shell .social-icon:hover,
+.site-shell .wallet-option:hover { transform: none; }

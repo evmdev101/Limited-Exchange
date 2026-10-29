@@ -10,27 +10,27 @@
   "pools": {
     "cashx": {
       "contract": "CashXLCashXMintExchange",
-      "originalToken": "0x4C450b3C2b89a2DAbE5A3eE39FF475134A30d665",
+      "originalToken": "0x510c547318032275e41D1362A465783320d8152f",
       "limitedToken": "0x57cBC908078b291117242385Fe7C0cf3582fA460",
-      "burnExchange": "0x4E4375142e847eC7212EFEACA956B7b4936D4400"
+      "burnExchange": "0xE346B08433BE131A7964a7e1F46c6fC28eC69003"
     },
     "distrox": {
       "contract": "DistroXLDistroXMintExchange",
-      "originalToken": "0xA1198e47Ac3D89903D7eCFd04a14b8Bfd72d7B03",
+      "originalToken": "0xec03E43e21B337F60F6a63944bC7b61B531c035F",
       "limitedToken": "0xfC961146971679Cc4E731F60D72B60eb3dd8b036",
-      "burnExchange": "0x23321FaCb12B5eA17D9caAd48B8e406ad82A0532"
+      "burnExchange": "0x3EbC49f2e89260655D957774E73440e20e942934"
     },
     "divx": {
       "contract": "DivXLDivXMintExchange",
-      "originalToken": "0x6df9CD07BF067b42A700dc679bD9325Ff61Da8f3",
+      "originalToken": "0xB528AFfc72Dfc7Da5d3184C4e233Fc9fc156c4E0",
       "limitedToken": "0x8DbD0923c0c2dd4973806B655036251610aE11BC",
-      "burnExchange": "0xf71624352eDb44f6e622d1e518C6308e6d5dE9Fc"
+      "burnExchange": "0x2b199B79E84f74e06c1E08baf92249Be4003EBa0"
     },
     "gsx": {
       "contract": "GSXLGSXMintExchange",
-      "originalToken": "0x395127a44Ac1CDc609C8CC9d048E096e8E8fC30e",
+      "originalToken": "0xFA490c52FD934c7b8629E30Ea4c14683ee000b5d",
       "limitedToken": "0xCc6A42F028905096c76E5631aed78e20f5CDDFBa",
-      "burnExchange": "0xfe4fF21dD40642dAdbCaD41CC83A9FbC2cC32477"
+      "burnExchange": "0x9548c4b026b5B4026C60edd39D17D72EABa97093"
     }
   }
 }
